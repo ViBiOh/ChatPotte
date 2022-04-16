@@ -5,14 +5,7 @@ ifneq ("$(wildcard .env)","")
 	export
 endif
 
-APP_NAME = goweb
 PACKAGES ?= ./...
-
-MAIN_SOURCE = cmd/goweb/api.go
-MAIN_RUNNER = go run $(MAIN_SOURCE)
-ifeq ($(DEBUG), true)
-	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --
-endif
 
 .DEFAULT_GOAL := app
 
@@ -37,7 +30,7 @@ app: init dev
 
 ## dev: Build app
 .PHONY: dev
-dev: format style test build
+dev: format style test
 
 ## init: Bootstrap your application. e.g. fetch some data files, make some API calls, request user input etc...
 .PHONY: init
@@ -72,13 +65,3 @@ test:
 .PHONY: bench
 bench:
 	go test $(PACKAGES) -bench . -benchmem -run Benchmark.*
-
-## build: Build the application.
-.PHONY: build
-build:
-	CGO_ENABLED=0 go build -ldflags="-s -w" -installsuffix nocgo -o bin/$(APP_NAME) $(MAIN_SOURCE)
-
-## run: Locally run the application, e.g. node index.js, python -m myapp, go run myapp etc ...
-.PHONY: run
-run:
-	$(MAIN_RUNNER)
