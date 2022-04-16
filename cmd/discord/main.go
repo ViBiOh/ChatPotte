@@ -12,11 +12,11 @@ import (
 )
 
 func main() {
-	fs := flag.NewFlagSet("DiscordConfigure", flag.ExitOnError)
+	fs := flag.NewFlagSet("discord", flag.ExitOnError)
 
 	loggerConfig := logger.Flags(fs, "logger")
 	discordConfig := discord.Flags(fs, "")
-	inputFile := flags.String(fs, "", "discord", "Input", "JSON file containing commands definition", "", nil)
+	configuration := flags.String(fs, "", "commands", "Commands", "Configuration of commands, as JSON string", "", nil)
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 
@@ -26,20 +26,9 @@ func main() {
 	discordApp, err := discord.New(discordConfig, "", nil)
 	logger.Fatal(err)
 
-	file, err := os.Open(*inputFile)
-	if err != nil {
-		logger.Fatal(fmt.Errorf("unable to open input file: %s", err))
-	}
-
-	defer func() {
-		if closeErr := file.Close(); closeErr != nil {
-			logger.Error("unable to close input file: %s", err)
-		}
-	}()
-
 	var commands map[string]discord.Command
-	if err := json.NewDecoder(file).Decode(&commands); err != nil {
-		logger.Fatal(fmt.Errorf("unable to parse input file: %s", err))
+	if err := json.Unmarshal([]byte(*configuration), &commands); err != nil {
+		logger.Fatal(fmt.Errorf("unable to parse configuration: %s", err))
 	}
 
 	logger.Fatal(discordApp.ConfigureCommands(commands))

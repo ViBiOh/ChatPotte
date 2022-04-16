@@ -187,6 +187,8 @@ func writeMultipart(data InteractionDataResponse) func(*multipart.Writer) error 
 		}
 
 		for _, file := range data.Attachments {
+			file.Ephemeral = data.Flags&EphemeralMessage != 0
+
 			if err = addAttachment(mw, file); err != nil {
 				return err
 			}
