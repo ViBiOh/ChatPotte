@@ -5,7 +5,7 @@ ifneq ("$(wildcard .env)","")
 	export
 endif
 
-APP_NAME = DiscordConfigure
+APP_NAME = discord_configure
 PACKAGES ?= ./...
 
 MAIN_SOURCE = cmd/discord/main.go

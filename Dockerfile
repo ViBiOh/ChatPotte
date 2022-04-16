@@ -2,7 +2,7 @@ FROM vibioh/scratch
 
 COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-ENTRYPOINT [ "/DiscordConfigure" ]
+ENTRYPOINT [ "/discord_configure" ]
 
 ARG VERSION
 ENV VERSION=${VERSION}
@@ -10,4 +10,4 @@ ENV VERSION=${VERSION}
 ARG TARGETOS
 ARG TARGETARCH
 
-COPY release/DiscordConfigure_${TARGETOS}_${TARGETARCH} /DiscordConfigure
+COPY release/discord_configure_${TARGETOS}_${TARGETARCH} /discord_configure
