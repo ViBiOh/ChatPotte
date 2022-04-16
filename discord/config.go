@@ -10,8 +10,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
-// Start discord configuration
-func (a App) Start(commands map[string]Command) error {
+// ConfigureCommands with the API
+func (a App) ConfigureCommands(commands map[string]Command) error {
 	if len(a.applicationID) == 0 {
 		return nil
 	}

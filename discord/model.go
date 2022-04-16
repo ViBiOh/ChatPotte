@@ -79,33 +79,49 @@ type Member struct {
 	} `json:"user,omitempty"`
 }
 
+// InteractionDataResponse for responding to user
+type InteractionDataResponse struct {
+	Content         string          `json:"content,omitempty"`
+	AllowedMentions AllowedMentions `json:"allowed_mentions"`
+	Embeds          []Embed         `json:"embeds,omitempty"`
+	Components      []Component     `json:"components,omitempty"`
+	Attachments     []Attachment    `json:"attachments,omitempty"`
+	Flags           int             `json:"flags,omitempty"`
+}
+
+// NewDataResponse create a data response
+func NewDataResponse(content string) InteractionDataResponse {
+	return InteractionDataResponse{
+		Content: content,
+		AllowedMentions: AllowedMentions{
+			Parse: []string{},
+		},
+	}
+}
+
+// AddEmbed add given embed to response
+func (d InteractionDataResponse) AddEmbed(embed Embed) InteractionDataResponse {
+	if d.Embeds == nil {
+		d.Embeds = []Embed{embed}
+	} else {
+		d.Embeds = append(d.Embeds, embed)
+	}
+
+	return d
+}
+
 // InteractionResponse for responding to user
 type InteractionResponse struct {
 	Data InteractionDataResponse `json:"data,omitempty"`
 	Type InteractionCallbackType `json:"type,omitempty"`
 }
 
-// InteractionDataResponse for responding to user
-type InteractionDataResponse struct {
-	Content         string          `json:"content,omitempty"`
-	AllowedMentions AllowedMentions `json:"allowed_mentions"`
-	Embeds          []Embed         `json:"embeds"`
-	Components      []Component     `json:"components"`
-	Attachments     []Attachment    `json:"attachments"`
-	Flags           int             `json:"flags"`
-}
-
 // NewResponse creates a response
 func NewResponse(iType InteractionCallbackType, content string) InteractionResponse {
-	resp := InteractionResponse{
+	return InteractionResponse{
 		Type: iType,
+		Data: NewDataResponse(content),
 	}
-	resp.Data.Content = content
-	resp.Data.AllowedMentions = AllowedMentions{
-		Parse: []string{},
-	}
-
-	return resp
 }
 
 // Ephemeral set response to ephemeral
@@ -116,10 +132,16 @@ func (i InteractionResponse) Ephemeral() InteractionResponse {
 
 // AddEmbed add given embed to response
 func (i InteractionResponse) AddEmbed(embed Embed) InteractionResponse {
-	if i.Data.Embeds == nil {
-		i.Data.Embeds = []Embed{embed}
+	i.Data = i.Data.AddEmbed(embed)
+	return i
+}
+
+// AddComponent add given component to response
+func (i InteractionResponse) AddComponent(component Component) InteractionResponse {
+	if i.Data.Components == nil {
+		i.Data.Components = []Component{component}
 	} else {
-		i.Data.Embeds = append(i.Data.Embeds, embed)
+		i.Data.Components = append(i.Data.Components, component)
 	}
 
 	return i
@@ -176,7 +198,7 @@ type AllowedMentions struct {
 
 // Image content
 type Image struct {
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
 }
 
 // NewImage create an image
@@ -188,7 +210,7 @@ func NewImage(url string) *Image {
 
 // Author content
 type Author struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name"`
 	URL  string `json:"url,omitempty"`
 }
 
@@ -220,8 +242,8 @@ func (e Embed) SetColor(color int) Embed {
 
 // Field for embed
 type Field struct {
-	Name   string `json:"name,omitempty"`
-	Value  string `json:"value,omitempty"`
+	Name   string `json:"name"`
+	Value  string `json:"value"`
 	Inline bool   `json:"inline,omitempty"`
 }
 
@@ -258,7 +280,7 @@ type Attachment struct {
 	ID        int    `json:"id"`
 	Filename  string `json:"filename"`
 	Size      int64  `json:"size,omitempty"`
-	Ephemeral bool   `json:"ephemeral"`
+	Ephemeral bool   `json:"ephemeral,omitempty"`
 	filepath  string
 }
 
