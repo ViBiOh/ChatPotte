@@ -148,16 +148,7 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 			ctx := context.Background()
 			deferredResponse := asyncFn(ctx)
 
-			req := discordRequest.Method(http.MethodPatch).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token))
-
-			var resp *http.Response
-			var err error
-			if len(deferredResponse.Data.Attachments) > 0 {
-				resp, err = req.Multipart(ctx, writeMultipart(deferredResponse.Data))
-			} else {
-				resp, err = req.JSON(ctx, deferredResponse.Data)
-			}
-
+			resp, err := Send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
 				logger.Error("unable to send async response: %s", err)
 				return
@@ -168,6 +159,17 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 			}
 		}()
 	}
+}
+
+// Send given data with method and path
+func Send(ctx context.Context, method, path string, data InteractionDataResponse) (*http.Response, error) {
+	req := discordRequest.Method(method).Path(path)
+
+	if len(data.Attachments) > 0 {
+		return req.Multipart(ctx, writeMultipart(data))
+	}
+
+	return req.StreamJSON(ctx, data)
 }
 
 func writeMultipart(data InteractionDataResponse) func(*multipart.Writer) error {

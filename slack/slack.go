@@ -155,7 +155,7 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 		slackResponse := a.onInteract(ctx, payload)
 
-		resp, err := request.Post(payload.ResponseURL).JSON(ctx, slackResponse)
+		resp, err := request.Post(payload.ResponseURL).StreamJSON(ctx, slackResponse)
 		if err != nil {
 			logger.Error("unable to send interact on response_url: %s", err)
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {

@@ -40,8 +40,7 @@ func (a App) ConfigureCommands(commands map[string]Command) error {
 			url := rootURL + url
 			logger.WithField("command", name).Info("Configuring with URL `%s`", url)
 
-			_, err := discordRequest.Method(http.MethodPost).Path(url).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).JSON(ctx, command)
-			if err != nil {
+			if _, err := discordRequest.Method(http.MethodPost).Path(url).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
 				return fmt.Errorf("unable to configure `%s` command: %s", name, err)
 			}
 		}
