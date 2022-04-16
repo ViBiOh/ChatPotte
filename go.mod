@@ -1,4 +1,4 @@
-module github.com/ViBiOh/goweb
+module github.com/ViBiOh/ChatPotte
 
 go 1.18
 
