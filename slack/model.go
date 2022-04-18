@@ -2,9 +2,6 @@ package slack
 
 import "fmt"
 
-// EmptySection for not found
-var EmptySection = Section{}
-
 // Block response for slack
 type Block any
 
@@ -94,12 +91,33 @@ type Section struct {
 }
 
 // NewSection creates Section
-func NewSection(text Text, accessory *Accessory) Block {
+func NewSection(text Text) Block {
 	return Section{
-		Type:      "section",
-		Text:      text,
-		Accessory: accessory,
+		Type: "section",
+		Text: text,
 	}
+}
+
+// IsZero check if instance is populated
+func (s Section) IsZero() bool {
+	return len(s.Type) == 0 && len(s.Fields) == 0 && s.Accessory == nil && len(s.Text.Text) == 0
+}
+
+// WithAccessory set accessory for section
+func (s Section) WithAccessory(accessory *Accessory) Section {
+	s.Accessory = accessory
+	return s
+}
+
+// AddField add given field to section
+func (s Section) AddField(field Text) Section {
+	if s.Fields == nil {
+		s.Fields = []Text{field}
+	} else {
+		s.Fields = append(s.Fields, field)
+	}
+
+	return s
 }
 
 // Response response content
@@ -140,6 +158,13 @@ type InteractivePayload struct {
 	Type        string              `json:"type"`
 	ResponseURL string              `json:"response_url"`
 	Actions     []InteractiveAction `json:"actions"`
+}
+
+// NewResponse creates text response
+func NewResponse(message string) Response {
+	return Response{
+		Text: message,
+	}
 }
 
 // NewError creates ephemeral error response
