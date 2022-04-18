@@ -91,7 +91,7 @@ type Section struct {
 }
 
 // NewSection creates Section
-func NewSection(text Text) Block {
+func NewSection(text Text) Section {
 	return Section{
 		Type: "section",
 		Text: text,
@@ -129,6 +129,42 @@ type Response struct {
 	DeleteOriginal  bool    `json:"delete_original,omitempty"`
 }
 
+// NewResponse creates text response
+func NewResponse(message string) Response {
+	return Response{
+		Text: message,
+	}
+}
+
+// Ephemeral set type to ephemeral
+func (r Response) Ephemeral() Response {
+	r.ResponseType = "ephemeral"
+	return r
+}
+
+// WithReplaceOriginal set replace original to true
+func (r Response) WithReplaceOriginal() Response {
+	r.ReplaceOriginal = true
+	return r
+}
+
+// WithDeleteOriginal set delete original to true
+func (r Response) WithDeleteOriginal() Response {
+	r.DeleteOriginal = true
+	return r
+}
+
+// AddBlock add given block to response
+func (r Response) AddBlock(block Block) Response {
+	if r.Blocks == nil {
+		r.Blocks = []Block{block}
+	} else {
+		r.Blocks = append(r.Blocks, block)
+	}
+
+	return r
+}
+
 // SlashPayload receives by a slash command
 type SlashPayload struct {
 	ChannelID   string `json:"channel_id"`
@@ -160,13 +196,6 @@ type InteractivePayload struct {
 	Actions     []InteractiveAction `json:"actions"`
 }
 
-// NewResponse creates text response
-func NewResponse(message string) Response {
-	return Response{
-		Text: message,
-	}
-}
-
 // NewError creates ephemeral error response
 func NewError(err error) Response {
 	return NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
@@ -174,9 +203,5 @@ func NewError(err error) Response {
 
 // NewEphemeralMessage creates ephemeral text response
 func NewEphemeralMessage(message string) Response {
-	return Response{
-		ResponseType:    "ephemeral",
-		Text:            message,
-		ReplaceOriginal: true,
-	}
+	return NewResponse(message).Ephemeral().WithReplaceOriginal()
 }
