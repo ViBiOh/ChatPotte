@@ -132,7 +132,8 @@ type Response struct {
 // NewResponse creates text response
 func NewResponse(message string) Response {
 	return Response{
-		Text: message,
+		Text:         message,
+		ResponseType: "in_channel",
 	}
 }
 
