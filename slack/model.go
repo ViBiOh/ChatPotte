@@ -85,9 +85,9 @@ func NewActions(blockID string, elements ...Element) Block {
 // Section response for slack
 type Section struct {
 	Accessory *Accessory `json:"accessory,omitempty"`
-	Fields    []Text     `json:"fields,omitempty"`
-	Type      string     `json:"type"`
 	Text      Text       `json:"text"`
+	Type      string     `json:"type"`
+	Fields    []Text     `json:"fields,omitempty"`
 }
 
 // NewSection creates Section

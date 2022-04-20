@@ -53,21 +53,21 @@ const (
 
 // InteractionRequest when user perform an action
 type InteractionRequest struct {
+	Member        Member `json:"member"`
 	ID            string `json:"id"`
 	GuildID       string `json:"guild_id"`
-	Member        Member `json:"member"`
 	Token         string `json:"token"`
 	ApplicationID string `json:"application_id"`
-	Data          struct {
-		Name     string          `json:"name"`
-		CustomID string          `json:"custom_id"`
-		Options  []CommandOption `json:"options"`
-	} `json:"data"`
-	Message struct {
+	Message       struct {
 		Interaction struct {
 			Name string `json:"name"`
 		} `json:"interaction"`
 	} `json:"message"`
+	Data struct {
+		Name     string          `json:"name"`
+		CustomID string          `json:"custom_id"`
+		Options  []CommandOption `json:"options"`
+	} `json:"data"`
 	Type interactionType `json:"type"`
 }
 
@@ -277,11 +277,11 @@ func NewButton(style buttonStyle, label, customID string) Component {
 
 // Attachment for file upload
 type Attachment struct {
-	ID        int    `json:"id"`
 	Filename  string `json:"filename"`
-	Size      int64  `json:"size,omitempty"`
-	Ephemeral bool   `json:"ephemeral,omitempty"`
 	filepath  string
+	ID        int   `json:"id"`
+	Size      int64 `json:"size,omitempty"`
+	Ephemeral bool  `json:"ephemeral,omitempty"`
 }
 
 func newAttachment(id int, size int64, filename, filepath string, ephemeral bool) Attachment {
