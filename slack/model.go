@@ -122,12 +122,15 @@ func (s Section) AddField(field Text) Section {
 
 // Context response for slack
 type Context struct {
+	Type     string    `json:"type"`
 	Elements []Element `json:"elements"`
 }
 
 // NewContext creates Context
 func NewContext() Context {
-	return Context{}
+	return Context{
+		Type: "context",
+	}
 }
 
 // AddElement add given element to context
