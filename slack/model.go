@@ -148,11 +148,9 @@ func (c Context) AddElement(element Element) Context {
 type Response struct {
 	ResponseType    string  `json:"response_type,omitempty"`
 	Text            string  `json:"text,omitempty"`
-	Username        string  `json:"username,omitempty"`
 	Blocks          []Block `json:"blocks,omitempty"`
 	ReplaceOriginal bool    `json:"replace_original,omitempty"`
 	DeleteOriginal  bool    `json:"delete_original,omitempty"`
-	AsUser          bool    `json:"as_user,omitempty"`
 }
 
 // NewResponse creates text response
@@ -178,14 +176,6 @@ func (r Response) WithReplaceOriginal() Response {
 // WithDeleteOriginal set delete original to true
 func (r Response) WithDeleteOriginal() Response {
 	r.DeleteOriginal = true
-	return r
-}
-
-// WithUser set as user to true
-func (r Response) WithUser(username string) Response {
-	r.AsUser = true
-	r.Username = username
-
 	return r
 }
 
