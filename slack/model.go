@@ -151,6 +151,7 @@ type Response struct {
 	Blocks          []Block `json:"blocks,omitempty"`
 	ReplaceOriginal bool    `json:"replace_original,omitempty"`
 	DeleteOriginal  bool    `json:"delete_original,omitempty"`
+	AsUser          bool    `json:"as_user,omitempty"`
 }
 
 // NewResponse creates text response
@@ -176,6 +177,12 @@ func (r Response) WithReplaceOriginal() Response {
 // WithDeleteOriginal set delete original to true
 func (r Response) WithDeleteOriginal() Response {
 	r.DeleteOriginal = true
+	return r
+}
+
+// WithAsUser set as user to true
+func (r Response) WithAsUser() Response {
+	r.AsUser = true
 	return r
 }
 
