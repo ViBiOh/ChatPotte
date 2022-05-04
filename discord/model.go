@@ -83,10 +83,10 @@ type Member struct {
 type InteractionDataResponse struct {
 	Content         string          `json:"content,omitempty"`
 	AllowedMentions AllowedMentions `json:"allowed_mentions"`
-	Embeds          []Embed         `json:"embeds,omitempty"`
-	Components      []Component     `json:"components,omitempty"`
+	Embeds          []Embed         `json:"embeds"`     // no `omitempty` to pass empty array when cleared
+	Components      []Component     `json:"components"` // no `omitempty` to pass empty array when cleared
 	Attachments     []Attachment    `json:"attachments,omitempty"`
-	Flags           int             `json:"flags,omitempty"`
+	Flags           int             `json:"flags"`
 }
 
 // NewDataResponse create a data response
