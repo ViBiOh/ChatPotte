@@ -66,6 +66,24 @@ func NewButtonElement(text string, actionID, value, style string) Element {
 	}
 }
 
+// Image Slack's model
+type Image struct {
+	Type  string `json:"type"`
+	Image string `json:"image_url"`
+	Alt   string `json:"alt_text"`
+	Title Text   `json:"title"`
+}
+
+// NewImage creates Image
+func NewImage(image, alt, title string) Image {
+	return Image{
+		Type:  "image",
+		Image: image,
+		Alt:   alt,
+		Title: NewPlainText(title),
+	}
+}
+
 // Actions response for slack
 type Actions struct {
 	Type     string    `json:"type"`
@@ -74,7 +92,7 @@ type Actions struct {
 }
 
 // NewActions creates Actions
-func NewActions(blockID string, elements ...Element) Block {
+func NewActions(blockID string, elements ...Element) Actions {
 	return Actions{
 		Type:     "actions",
 		Elements: elements,
