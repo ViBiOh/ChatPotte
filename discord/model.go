@@ -83,9 +83,9 @@ type Member struct {
 type InteractionDataResponse struct {
 	Content         string          `json:"content,omitempty"`
 	AllowedMentions AllowedMentions `json:"allowed_mentions"`
-	Embeds          []Embed         `json:"embeds"`     // no `omitempty` to pass empty array when cleared
-	Components      []Component     `json:"components"` // no `omitempty` to pass empty array when cleared
-	Attachments     []Attachment    `json:"attachments,omitempty"`
+	Embeds          []Embed         `json:"embeds"`      // no `omitempty` to pass empty array when cleared
+	Components      []Component     `json:"components"`  // no `omitempty` to pass empty array when cleared
+	Attachments     []Attachment    `json:"attachments"` // no `omitempty` to pass empty array when cleared
 	Flags           int             `json:"flags"`
 }
 
@@ -187,6 +187,7 @@ func NewEphemeral(replace bool, content string) InteractionResponse {
 	instance.Data.Flags = EphemeralMessage
 	instance.Data.Embeds = []Embed{}
 	instance.Data.Components = []Component{}
+	instance.Data.Attachments = []Attachment{}
 
 	return instance
 }
