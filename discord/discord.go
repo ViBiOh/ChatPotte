@@ -44,7 +44,6 @@ type Config struct {
 	publicKey     *string
 	clientID      *string
 	clientSecret  *string
-	website       *string
 }
 
 // Flags adds flags for configuring package
