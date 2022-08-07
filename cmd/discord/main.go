@@ -28,7 +28,7 @@ func main() {
 
 	var commands map[string]discord.Command
 	if err := json.Unmarshal([]byte(*configuration), &commands); err != nil {
-		logger.Fatal(fmt.Errorf("unable to parse configuration: %s", err))
+		logger.Fatal(fmt.Errorf("parse configuration: %s", err))
 	}
 
 	logger.Fatal(discordApp.ConfigureCommands(commands))

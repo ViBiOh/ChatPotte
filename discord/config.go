@@ -24,12 +24,12 @@ func (a App) ConfigureCommands(commands map[string]Command) error {
 
 	resp, err := discordRequest.Method(http.MethodPost).Path("/oauth2/token").BasicAuth(a.clientID, a.clientSecret).Form(ctx, data)
 	if err != nil {
-		return fmt.Errorf("unable to get token: %s", err)
+		return fmt.Errorf("get token: %s", err)
 	}
 
 	content := make(map[string]any)
 	if err := httpjson.Read(resp, &content); err != nil {
-		return fmt.Errorf("unable to read oauth token: %s", err)
+		return fmt.Errorf("read oauth token: %s", err)
 	}
 
 	bearer := content["access_token"].(string)
@@ -41,7 +41,7 @@ func (a App) ConfigureCommands(commands map[string]Command) error {
 			logger.WithField("command", name).Info("Configuring with URL `%s`", url)
 
 			if _, err := discordRequest.Method(http.MethodPost).Path(url).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
-				return fmt.Errorf("unable to configure `%s` command: %s", name, err)
+				return fmt.Errorf("configure `%s` command: %s", name, err)
 			}
 		}
 

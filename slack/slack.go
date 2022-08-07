@@ -109,7 +109,7 @@ func (a App) Handler() http.Handler {
 func (a App) checkSignature(r *http.Request) bool {
 	tsValue, err := strconv.ParseInt(r.Header.Get("X-Slack-Request-Timestamp"), 10, 64)
 	if err != nil {
-		logger.Error("unable to parse timestamp: %s", err)
+		logger.Error("parse timestamp: %s", err)
 		return false
 	}
 
@@ -120,7 +120,7 @@ func (a App) checkSignature(r *http.Request) bool {
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		logger.Warn("unable to read request body: %s", err)
+		logger.Warn("read request body: %s", err)
 		return false
 	}
 
@@ -156,9 +156,9 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := request.Post(payload.ResponseURL).StreamJSON(ctx, slackResponse)
 		if err != nil {
-			logger.Error("unable to send interact on response_url: %s", err)
+			logger.Error("send interact on response_url: %s", err)
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
-			logger.Error("unable to discard interact body on response_url: %s", err)
+			logger.Error("discard interact body on response_url: %s", err)
 		}
 	}()
 }

@@ -28,13 +28,13 @@ func (a App) handleOauth(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := request.Post(slackOauthURL).Form(r.Context(), params)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("unable to confirm oauth request: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("confirm oauth request: %s", err))
 		return
 	}
 
 	var oauthResponse slackOauthReponse
 	if err := httpjson.Read(resp, &oauthResponse); err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("unable to parse oauth response: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("parse oauth response: %s", err))
 		return
 	}
 

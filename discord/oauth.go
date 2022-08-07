@@ -19,12 +19,12 @@ func (a App) handleOauth(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := discordRequest.Path("/oauth2/token").Method(http.MethodPost).Form(r.Context(), params)
 	if err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("unable to confirm oauth request: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("confirm oauth request: %s", err))
 		return
 	}
 
 	if err := request.DiscardBody(resp.Body); err != nil {
-		httperror.InternalServerError(w, fmt.Errorf("unable to discard body: %s", err))
+		httperror.InternalServerError(w, fmt.Errorf("discard body: %s", err))
 		return
 	}
 

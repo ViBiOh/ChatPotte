@@ -65,7 +65,7 @@ func New(config Config, website string, handler OnMessage) (App, error) {
 
 	publicKey, err := hex.DecodeString(publicKeyStr)
 	if err != nil {
-		return App{}, fmt.Errorf("unable to decode public key string: %s", err)
+		return App{}, fmt.Errorf("decode public key string: %s", err)
 	}
 
 	return App{
@@ -103,7 +103,7 @@ func (a App) Handler() http.Handler {
 func (a App) checkSignature(r *http.Request) bool {
 	sig, err := hex.DecodeString(r.Header.Get("X-Signature-Ed25519"))
 	if err != nil {
-		logger.Warn("unable to decode signature string: %s", err)
+		logger.Warn("decode signature string: %s", err)
 		return false
 	}
 
@@ -114,7 +114,7 @@ func (a App) checkSignature(r *http.Request) bool {
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		logger.Warn("unable to read request body: %s", err)
+		logger.Warn("read request body: %s", err)
 		return false
 	}
 
@@ -149,12 +149,12 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 			resp, err := Send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
-				logger.Error("unable to send async response: %s", err)
+				logger.Error("send async response: %s", err)
 				return
 			}
 
 			if err = request.DiscardBody(resp.Body); err != nil {
-				logger.Error("unable to discard async body: %s", err)
+				logger.Error("discard async body: %s", err)
 			}
 		}()
 	}
@@ -178,11 +178,11 @@ func writeMultipart(data InteractionDataResponse) func(*multipart.Writer) error 
 		header.Set("Content-Type", "application/json")
 		partWriter, err := mw.CreatePart(header)
 		if err != nil {
-			return fmt.Errorf("unable to create payload part: %s", err)
+			return fmt.Errorf("create payload part: %s", err)
 		}
 
 		if err = json.NewEncoder(partWriter).Encode(data); err != nil {
-			return fmt.Errorf("unable to encode payload part: %s", err)
+			return fmt.Errorf("encode payload part: %s", err)
 		}
 
 		for _, file := range data.Attachments {
@@ -200,23 +200,23 @@ func writeMultipart(data InteractionDataResponse) func(*multipart.Writer) error 
 func addAttachment(mw *multipart.Writer, file Attachment) error {
 	partWriter, err := mw.CreateFormFile(fmt.Sprintf("files[%d]", file.ID), file.Filename)
 	if err != nil {
-		return fmt.Errorf("unable to create file part: %s", err)
+		return fmt.Errorf("create file part: %s", err)
 	}
 
 	var fileReader io.ReadCloser
 	fileReader, err = os.Open(file.filepath)
 	if err != nil {
-		return fmt.Errorf("unable to open file part: %s", err)
+		return fmt.Errorf("open file part: %s", err)
 	}
 
 	defer func() {
 		if closeErr := fileReader.Close(); closeErr != nil {
-			logger.Error("unable to close file part: %s", closeErr)
+			logger.Error("close file part: %s", closeErr)
 		}
 	}()
 
 	if _, err = io.Copy(partWriter, fileReader); err != nil {
-		return fmt.Errorf("unable to copy file part: %s", err)
+		return fmt.Errorf("copy file part: %s", err)
 	}
 
 	return nil
