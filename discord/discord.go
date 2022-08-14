@@ -124,7 +124,7 @@ func (a App) checkSignature(r *http.Request) bool {
 	msg.WriteString(r.Header.Get("X-Signature-Timestamp"))
 	msg.Write(body)
 
-	return ed25519.Verify(ed25519.PublicKey(a.publicKey), msg.Bytes(), sig)
+	return ed25519.Verify(a.publicKey, msg.Bytes(), sig)
 }
 
 func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {

@@ -6,7 +6,7 @@
 
 ## Getting started
 
-Golang binary is built with static link. You can download it directly from the [Github Release page](https://github.com/ViBiOh/ChatPotte/releases) or build it by yourself by cloning this repo and running `make`.
+Golang binary is built with static link. You can download it directly from the [GitHub Release page](https://github.com/ViBiOh/ChatPotte/releases) or build it by yourself by cloning this repo and running `make`.
 
 A Docker image is available for `amd64`, `arm` and `arm64` platforms on Docker Hub: [vibioh/ChatPotte](https://hub.docker.com/r/vibioh/ChatPotte/tags).
 

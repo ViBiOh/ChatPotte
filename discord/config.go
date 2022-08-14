@@ -36,11 +36,11 @@ func (a App) ConfigureCommands(commands map[string]Command) error {
 	rootURL := fmt.Sprintf("/applications/%s", a.applicationID)
 
 	for name, command := range commands {
-		for _, url := range getRegisterURLs(command) {
-			url := rootURL + url
-			logger.WithField("command", name).Info("Configuring with URL `%s`", url)
+		for _, registerURL := range getRegisterURLs(command) {
+			absoluteURL := rootURL + registerURL
+			logger.WithField("command", name).Info("Configuring with URL `%s`", absoluteURL)
 
-			if _, err := discordRequest.Method(http.MethodPost).Path(url).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
+			if _, err := discordRequest.Method(http.MethodPost).Path(absoluteURL).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
 				return fmt.Errorf("configure `%s` command: %s", name, err)
 			}
 		}
