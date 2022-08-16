@@ -65,7 +65,7 @@ func New(config Config, website string, handler OnMessage) (App, error) {
 
 	publicKey, err := hex.DecodeString(publicKeyStr)
 	if err != nil {
-		return App{}, fmt.Errorf("decode public key string: %s", err)
+		return App{}, fmt.Errorf("decode public key string: %w", err)
 	}
 
 	return App{
@@ -178,11 +178,11 @@ func writeMultipart(data InteractionDataResponse) func(*multipart.Writer) error 
 		header.Set("Content-Type", "application/json")
 		partWriter, err := mw.CreatePart(header)
 		if err != nil {
-			return fmt.Errorf("create payload part: %s", err)
+			return fmt.Errorf("create payload part: %w", err)
 		}
 
 		if err = json.NewEncoder(partWriter).Encode(data); err != nil {
-			return fmt.Errorf("encode payload part: %s", err)
+			return fmt.Errorf("encode payload part: %w", err)
 		}
 
 		for _, file := range data.Attachments {
@@ -200,13 +200,13 @@ func writeMultipart(data InteractionDataResponse) func(*multipart.Writer) error 
 func addAttachment(mw *multipart.Writer, file Attachment) error {
 	partWriter, err := mw.CreateFormFile(fmt.Sprintf("files[%d]", file.ID), file.Filename)
 	if err != nil {
-		return fmt.Errorf("create file part: %s", err)
+		return fmt.Errorf("create file part: %w", err)
 	}
 
 	var fileReader io.ReadCloser
 	fileReader, err = os.Open(file.filepath)
 	if err != nil {
-		return fmt.Errorf("open file part: %s", err)
+		return fmt.Errorf("open file part: %w", err)
 	}
 
 	defer func() {
@@ -216,7 +216,7 @@ func addAttachment(mw *multipart.Writer, file Attachment) error {
 	}()
 
 	if _, err = io.Copy(partWriter, fileReader); err != nil {
-		return fmt.Errorf("copy file part: %s", err)
+		return fmt.Errorf("copy file part: %w", err)
 	}
 
 	return nil
