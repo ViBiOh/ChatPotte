@@ -21,6 +21,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // CommandHandler for handling when user send a slash command
@@ -38,6 +40,7 @@ type Config struct {
 
 // App of package
 type App struct {
+	tracer     trace.Tracer
 	onCommand  CommandHandler
 	onInteract InteractHandler
 
@@ -56,8 +59,10 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, command CommandHandler, interact InteractHandler) App {
+func New(config Config, command CommandHandler, interact InteractHandler, tracer trace.Tracer) App {
 	return App{
+		tracer: tracer,
+
 		clientID:      *config.clientID,
 		clientSecret:  *config.clientSecret,
 		signingSecret: []byte(*config.signingSecret),
@@ -151,7 +156,9 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	go func() {
-		ctx := context.Background()
+		ctx, end := tracer.StartSpan(context.Background(), a.tracer, "async_intereact")
+		defer end()
+
 		slackResponse := a.onInteract(ctx, payload)
 
 		resp, err := request.Post(payload.ResponseURL).StreamJSON(ctx, slackResponse)

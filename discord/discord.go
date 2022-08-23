@@ -21,6 +21,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/query"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
+	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // OnMessage handle message event
@@ -30,6 +32,7 @@ var discordRequest = request.New().URL("https://discord.com/api/v8")
 
 // App of package
 type App struct {
+	tracer        trace.Tracer
 	handler       OnMessage
 	applicationID string
 	clientID      string
@@ -57,7 +60,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, website string, handler OnMessage) (App, error) {
+func New(config Config, website string, handler OnMessage, tracer trace.Tracer) (App, error) {
 	publicKeyStr := *config.publicKey
 	if len(publicKeyStr) == 0 {
 		return App{}, nil
@@ -69,6 +72,7 @@ func New(config Config, website string, handler OnMessage) (App, error) {
 	}
 
 	return App{
+		tracer:        tracer,
 		applicationID: *config.applicationID,
 		publicKey:     publicKey,
 		clientID:      *config.clientID,
@@ -129,6 +133,9 @@ func (a App) checkSignature(r *http.Request) bool {
 
 func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	var message InteractionRequest
+	ctx, end := tracer.StartSpan(r.Context(), a.tracer, "webhook")
+	defer end()
+
 	if err := httpjson.Parse(r, &message); err != nil {
 		httperror.BadRequest(w, err)
 		return
@@ -139,15 +146,17 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, asyncFn := a.handler(r.Context(), message)
+	response, asyncFn := a.handler(ctx, message)
 	httpjson.Write(w, http.StatusOK, response)
 
 	if asyncFn != nil {
 		go func() {
-			ctx := context.Background()
+			ctx, end := tracer.StartSpan(context.Background(), a.tracer, "async_webhook")
+			defer end()
+
 			deferredResponse := asyncFn(ctx)
 
-			resp, err := Send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token), deferredResponse.Data)
+			resp, err := a.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
 				logger.Error("send async response: %s", err)
 				return
@@ -160,8 +169,10 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Send given data with method and path
-func Send(ctx context.Context, method, path string, data InteractionDataResponse) (*http.Response, error) {
+func (a App) send(ctx context.Context, method, path string, data InteractionDataResponse) (*http.Response, error) {
+	ctx, end := tracer.StartSpan(ctx, a.tracer, "send")
+	defer end()
+
 	req := discordRequest.Method(method).Path(path)
 
 	if len(data.Attachments) > 0 {

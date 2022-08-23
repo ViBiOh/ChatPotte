@@ -23,7 +23,7 @@ func main() {
 	logger.Global(logger.New(loggerConfig))
 	defer logger.Close()
 
-	discordApp, err := discord.New(discordConfig, "", nil)
+	discordApp, err := discord.New(discordConfig, "", nil, nil)
 	logger.Fatal(err)
 
 	var commands map[string]discord.Command

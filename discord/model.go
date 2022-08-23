@@ -1,6 +1,12 @@
 package discord
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/ViBiOh/httputils/v4/pkg/logger"
+)
+
+const customIDMaxLen = 100
 
 type interactionType uint
 
@@ -268,6 +274,10 @@ type Component struct {
 
 // NewButton creates a new button
 func NewButton(style buttonStyle, label, customID string) Component {
+	if len(customID) > customIDMaxLen {
+		logger.Warn("`custom_id` exceeds %d characters", customIDMaxLen)
+	}
+
 	return Component{
 		Type:     buttonType,
 		Style:    style,
