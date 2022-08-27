@@ -3,7 +3,7 @@ package discord
 import (
 	"context"
 	"fmt"
-	"strings"
+	"net/url"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
@@ -14,23 +14,23 @@ func cacheKey(prefix, content string) string {
 	return fmt.Sprintf("%s:%s", prefix, content)
 }
 
-func SaveCustomID(ctx context.Context, redisApp redis.App, prefix, separator string, values ...string) (string, error) {
-	content := strings.Join(values, separator)
+func SaveCustomID(ctx context.Context, redisApp redis.App, prefix string, values url.Values) (string, error) {
+	content := values.Encode()
 	key := sha.New(content)
 	return key, redisApp.Store(ctx, cacheKey(prefix, key), content, time.Hour)
 }
 
-func RestoreCustomID(ctx context.Context, redisApp redis.App, prefix, separator, customID string, statics []string) (string, error) {
+func RestoreCustomID(ctx context.Context, redisApp redis.App, prefix, customID string, statics []string) (url.Values, error) {
 	for _, static := range statics {
 		if customID == static {
-			return customID, nil
+			return url.ParseQuery(customID)
 		}
 	}
 
 	content, err := redisApp.Load(ctx, cacheKey(prefix, customID))
 	if err != nil {
-		return customID, fmt.Errorf("load redis: %w", err)
+		return nil, fmt.Errorf("load redis: %w", err)
 	}
 
-	return content, nil
+	return url.ParseQuery(content)
 }
