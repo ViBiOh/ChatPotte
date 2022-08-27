@@ -10,10 +10,8 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
-var cacheVersion = sha.New("vibioh/ChatPotte/1")[:8]
-
 func cacheKey(prefix, content string) string {
-	return fmt.Sprintf("%s:%s:%s", prefix, cacheVersion, content)
+	return fmt.Sprintf("%s:%s", prefix, content)
 }
 
 func SaveCustomID(ctx context.Context, redisApp redis.App, prefix, separator string, values ...string) (string, error) {
