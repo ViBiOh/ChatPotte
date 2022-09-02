@@ -32,5 +32,5 @@ func RestoreCustomID(ctx context.Context, redisApp redis.App, prefix, customID s
 		return nil, fmt.Errorf("load redis: %w", err)
 	}
 
-	return url.ParseQuery(content)
+	return url.ParseQuery(string(content))
 }
