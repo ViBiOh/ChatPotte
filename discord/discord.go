@@ -150,8 +150,8 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	httpjson.Write(w, http.StatusOK, response)
 
 	if asyncFn != nil {
-		go func() {
-			ctx, end := tracer.StartSpan(context.Background(), a.tracer, "async_webhook")
+		go func(ctx context.Context) {
+			ctx, end := tracer.StartSpan(ctx, a.tracer, "async_webhook")
 			defer end()
 
 			deferredResponse := asyncFn(ctx)
@@ -165,7 +165,7 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 			if err = request.DiscardBody(resp.Body); err != nil {
 				logger.Error("discard async body: %s", err)
 			}
-		}()
+		}(tracer.CopyToBackground(ctx))
 	}
 }
 

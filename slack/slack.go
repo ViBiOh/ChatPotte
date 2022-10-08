@@ -148,6 +148,10 @@ func (a App) checkSignature(r *http.Request) bool {
 
 func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 	var payload InteractivePayload
+
+	ctx, end := tracer.StartSpan(r.Context(), a.tracer, "interact")
+	defer end()
+
 	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
 		httpjson.Write(w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
 		return
@@ -155,8 +159,8 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 
-	go func() {
-		ctx, end := tracer.StartSpan(context.Background(), a.tracer, "async_intereact")
+	go func(ctx context.Context) {
+		ctx, end := tracer.StartSpan(ctx, a.tracer, "async_intereact")
 		defer end()
 
 		slackResponse := a.onInteract(ctx, payload)
@@ -167,5 +171,5 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
 			logger.Error("discard interact body on response_url: %s", err)
 		}
-	}()
+	}(tracer.CopyToBackground(ctx))
 }
