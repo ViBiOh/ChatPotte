@@ -1,3 +1,4 @@
+---
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -10,9 +11,7 @@ updates:
   - package-ecosystem: gomod
     directory: /
     schedule:
-      interval: weekly
-      time: "06:00"
-      day: friday
+      interval: daily
     commit-message:
       prefix: chore
       include: scope
