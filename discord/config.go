@@ -11,12 +11,10 @@ import (
 )
 
 // ConfigureCommands with the API
-func (a App) ConfigureCommands(commands map[string]Command) error {
+func (a App) ConfigureCommands(ctx context.Context, commands map[string]Command) error {
 	if len(a.applicationID) == 0 {
 		return nil
 	}
-
-	ctx := context.Background()
 
 	data := url.Values{}
 	data.Add("grant_type", "client_credentials")

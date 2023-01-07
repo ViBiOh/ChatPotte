@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -23,6 +24,8 @@ func main() {
 	logger.Global(logger.New(loggerConfig))
 	defer logger.Close()
 
+	ctx := context.Background()
+
 	discordApp, err := discord.New(discordConfig, "", nil, nil)
 	logger.Fatal(err)
 
@@ -31,5 +34,5 @@ func main() {
 		logger.Fatal(fmt.Errorf("parse configuration: %w", err))
 	}
 
-	logger.Fatal(discordApp.ConfigureCommands(commands))
+	logger.Fatal(discordApp.ConfigureCommands(ctx, commands))
 }
