@@ -14,13 +14,13 @@ func cacheKey(prefix, content string) string {
 	return fmt.Sprintf("%s:%s", prefix, content)
 }
 
-func SaveCustomID(ctx context.Context, redisApp redis.App, prefix string, values url.Values) (string, error) {
+func SaveCustomID(ctx context.Context, redisApp redis.Client, prefix string, values url.Values) (string, error) {
 	content := values.Encode()
 	key := sha.New(content)
 	return key, redisApp.Store(ctx, cacheKey(prefix, key), content, time.Hour)
 }
 
-func RestoreCustomID(ctx context.Context, redisApp redis.App, prefix, customID string, statics []string) (url.Values, error) {
+func RestoreCustomID(ctx context.Context, redisApp redis.Client, prefix, customID string, statics []string) (url.Values, error) {
 	for _, static := range statics {
 		if customID == static {
 			return url.ParseQuery(customID)
