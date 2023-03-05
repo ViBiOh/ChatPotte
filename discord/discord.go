@@ -16,6 +16,7 @@ import (
 	"os"
 
 	"github.com/ViBiOh/flags"
+	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -132,11 +133,15 @@ func (a App) checkSignature(r *http.Request) bool {
 }
 
 func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
-	var message InteractionRequest
-	ctx, end := tracer.StartSpan(r.Context(), a.tracer, "webhook")
-	defer end()
+	var (
+		message InteractionRequest
+		err     error
+	)
 
-	if err := httpjson.Parse(r, &message); err != nil {
+	ctx, end := tracer.StartSpan(r.Context(), a.tracer, "webhook")
+	defer end(&err)
+
+	if err = httpjson.Parse(r, &message); err != nil {
 		httperror.BadRequest(w, err)
 		return
 	}
@@ -151,8 +156,10 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 	if asyncFn != nil {
 		go func(ctx context.Context) {
+			var err error
+
 			ctx, end := tracer.StartSpan(ctx, a.tracer, "async_webhook")
-			defer end()
+			defer end(&err)
 
 			deferredResponse := asyncFn(ctx)
 
@@ -165,13 +172,13 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 			if err = request.DiscardBody(resp.Body); err != nil {
 				logger.Error("discard async body: %s", err)
 			}
-		}(tracer.CopyToBackground(ctx))
+		}(cntxt.WithoutDeadline(ctx))
 	}
 }
 
-func (a App) send(ctx context.Context, method, path string, data InteractionDataResponse) (*http.Response, error) {
+func (a App) send(ctx context.Context, method, path string, data InteractionDataResponse) (resp *http.Response, err error) {
 	ctx, end := tracer.StartSpan(ctx, a.tracer, "send")
-	defer end()
+	defer end(&err)
 
 	req := discordRequest.Method(method).Path(path)
 

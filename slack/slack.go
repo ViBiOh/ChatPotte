@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/ViBiOh/flags"
+	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/logger"
@@ -147,10 +148,13 @@ func (a App) checkSignature(r *http.Request) bool {
 }
 
 func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
-	var payload InteractivePayload
+	var (
+		payload InteractivePayload
+		err     error
+	)
 
 	ctx, end := tracer.StartSpan(r.Context(), a.tracer, "interact")
-	defer end()
+	defer end(&err)
 
 	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
 		httpjson.Write(w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
@@ -160,8 +164,10 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	go func(ctx context.Context) {
+		var err error
+
 		ctx, end := tracer.StartSpan(ctx, a.tracer, "async_intereact")
-		defer end()
+		defer end(&err)
 
 		slackResponse := a.onInteract(ctx, payload)
 
@@ -171,5 +177,5 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
 			logger.Error("discard interact body on response_url: %s", err)
 		}
-	}(tracer.CopyToBackground(ctx))
+	}(cntxt.WithoutDeadline(ctx))
 }
