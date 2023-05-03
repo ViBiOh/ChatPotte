@@ -53,9 +53,9 @@ type App struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		clientID:      flags.String(fs, prefix, "slack", "ClientID", "ClientID", "", overrides),
-		clientSecret:  flags.String(fs, prefix, "slack", "ClientSecret", "ClientSecret", "", overrides),
-		signingSecret: flags.String(fs, prefix, "slack", "SigningSecret", "Signing secret", "", overrides),
+		clientID:      flags.New("ClientID", "ClientID").Prefix(prefix).DocPrefix("slack").String(fs, "", overrides),
+		clientSecret:  flags.New("ClientSecret", "ClientSecret").Prefix(prefix).DocPrefix("slack").String(fs, "", overrides),
+		signingSecret: flags.New("SigningSecret", "Signing secret").Prefix(prefix).DocPrefix("slack").String(fs, "", overrides),
 	}
 }
 

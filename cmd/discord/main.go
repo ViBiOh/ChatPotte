@@ -17,7 +17,7 @@ func main() {
 
 	loggerConfig := logger.Flags(fs, "logger")
 	discordConfig := discord.Flags(fs, "")
-	configuration := flags.String(fs, "", "commands", "Commands", "Configuration of commands, as JSON string", "", nil)
+	configuration := flags.New("commands", "Configuration of commands, as JSON string").Prefix("commands").String(fs, "", nil)
 
 	logger.Fatal(fs.Parse(os.Args[1:]))
 

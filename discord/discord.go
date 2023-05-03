@@ -53,10 +53,10 @@ type Config struct {
 // Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
 	return Config{
-		applicationID: flags.String(fs, prefix, "discord", "ApplicationID", "Application ID", "", overrides),
-		publicKey:     flags.String(fs, prefix, "discord", "PublicKey", "Public Key", "", overrides),
-		clientID:      flags.String(fs, prefix, "discord", "ClientID", "Client ID", "", overrides),
-		clientSecret:  flags.String(fs, prefix, "discord", "ClientSecret", "Client Secret", "", overrides),
+		applicationID: flags.New("ApplicationID", "Application ID").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
+		publicKey:     flags.New("PublicKey", "Public Key").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
+		clientID:      flags.New("ClientID", "Client ID").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
+		clientSecret:  flags.New("ClientSecret", "Client Secret").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
 	}
 }
 
