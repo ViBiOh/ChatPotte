@@ -14,6 +14,7 @@ import (
 
 func main() {
 	fs := flag.NewFlagSet("discord", flag.ExitOnError)
+	fs.Usage = flags.Usage(fs)
 
 	loggerConfig := logger.Flags(fs, "logger")
 	discordConfig := discord.Flags(fs, "")
