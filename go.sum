@@ -1,7 +1,7 @@
 github.com/ViBiOh/flags v1.3.1 h1:OHkGtVBPb6CpgWUST1VS9heKvHWBgwpyM8fXnuJRRVU=
 github.com/ViBiOh/flags v1.3.1/go.mod h1:yQAIBf4HTymJDCF0Bl8QQHvQTr5uiUMQBa/A/ao1oM4=
-github.com/ViBiOh/httputils/v4 v4.60.0 h1:ipPqFIFRryhcyNVlG5Qz+DoIWpBBWMMCn8hHWqeF720=
-github.com/ViBiOh/httputils/v4 v4.60.0/go.mod h1:UJ56JOqejKYhlkc51qa7y/KINSQM2oSif6WzjCajlhE=
+github.com/ViBiOh/httputils/v4 v4.60.1 h1:TmJT5YweUUZ3B8BXZJWmHEXJMrujVGWGpJovHdVlaG8=
+github.com/ViBiOh/httputils/v4 v4.60.1/go.mod h1:UJ56JOqejKYhlkc51qa7y/KINSQM2oSif6WzjCajlhE=
 github.com/bsm/ginkgo/v2 v2.7.0 h1:ItPMPH90RbmZJt5GtkcNvIRuGEdwlBItdNVoyzaNQao=
 github.com/bsm/ginkgo/v2 v2.7.0/go.mod h1:AiKlXPm7ItEHNc/2+OkrNG4E0ITzojb9/xWzvQ9XZ9w=
 github.com/bsm/gomega v1.26.0 h1:LhQm+AFcgV2M0WyKroMASzAzCAJVpAxQXv4SaI9a69Y=
