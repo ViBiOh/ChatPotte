@@ -6,8 +6,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/ViBiOh/httputils/v4/pkg/hash"
 	"github.com/ViBiOh/httputils/v4/pkg/redis"
-	"github.com/ViBiOh/httputils/v4/pkg/sha"
 )
 
 func cacheKey(prefix, content string) string {
@@ -16,7 +16,7 @@ func cacheKey(prefix, content string) string {
 
 func SaveCustomID(ctx context.Context, redisApp redis.Client, prefix string, values url.Values) (string, error) {
 	content := values.Encode()
-	key := sha.New(content)
+	key := hash.String(content)
 	return key, redisApp.Store(ctx, cacheKey(prefix, key), content, time.Hour)
 }
 
