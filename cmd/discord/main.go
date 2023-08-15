@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/ViBiOh/ChatPotte/discord"
@@ -20,20 +20,29 @@ func main() {
 	discordConfig := discord.Flags(fs, "")
 	configuration := flags.New("", "Configuration of commands, as JSON string").Prefix("commands").String(fs, "", nil)
 
-	logger.Fatal(fs.Parse(os.Args[1:]))
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		slog.Error("parse flags", "err", err)
+		os.Exit(1)
+	}
 
-	logger.Global(logger.New(loggerConfig))
-	defer logger.Close()
+	logger.New(loggerConfig)
 
 	ctx := context.Background()
 
 	discordApp, err := discord.New(discordConfig, "", nil, nil)
-	logger.Fatal(err)
+	if err != nil {
+		slog.Error("create discord", "err", err)
+		os.Exit(1)
+	}
 
 	var commands map[string]discord.Command
 	if err := json.Unmarshal([]byte(*configuration), &commands); err != nil {
-		logger.Fatal(fmt.Errorf("parse configuration: %w", err))
+		slog.Error("parse configuration", "err", err)
+		os.Exit(1)
 	}
 
-	logger.Fatal(discordApp.ConfigureCommands(ctx, commands))
+	if err := discordApp.ConfigureCommands(ctx, commands); err != nil {
+		slog.Error("configure command", "err", err)
+		os.Exit(1)
+	}
 }

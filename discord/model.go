@@ -2,8 +2,7 @@ package discord
 
 import (
 	"fmt"
-
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
+	"log/slog"
 )
 
 const customIDMaxLen = 100
@@ -275,7 +274,7 @@ type Component struct {
 // NewButton creates a new button
 func NewButton(style buttonStyle, label, customID string) Component {
 	if len(customID) > customIDMaxLen {
-		logger.Warn("`custom_id` exceeds %d characters", customIDMaxLen)
+		slog.Warn("`custom_id` exceeds max characters", "max", customIDMaxLen)
 	}
 
 	return Component{

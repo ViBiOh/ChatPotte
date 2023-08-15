@@ -11,6 +11,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,7 +21,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
 	"go.opentelemetry.io/otel/trace"
@@ -115,18 +115,18 @@ func (a App) Handler() http.Handler {
 func (a App) checkSignature(r *http.Request) bool {
 	tsValue, err := strconv.ParseInt(r.Header.Get("X-Slack-Request-Timestamp"), 10, 64)
 	if err != nil {
-		logger.Error("parse timestamp: %s", err)
+		slog.Error("parse timestamp", "err", err)
 		return false
 	}
 
 	if time.Unix(tsValue, 0).Before(time.Now().Add(time.Minute * -5)) {
-		logger.Warn("timestamp is from 5 minutes ago")
+		slog.Warn("timestamp is from 5 minutes ago")
 		return false
 	}
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		logger.Warn("read request body: %s", err)
+		slog.Warn("read request body", "err", err)
 		return false
 	}
 
@@ -143,7 +143,7 @@ func (a App) checkSignature(r *http.Request) bool {
 		return true
 	}
 
-	logger.Error("signature mismatch from slack's one: `%s`", slackSignature)
+	slog.Error("signature mismatch from slack's one", "slack_signature", slackSignature)
 	return false
 }
 
@@ -173,9 +173,9 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := request.Post(payload.ResponseURL).StreamJSON(ctx, slackResponse)
 		if err != nil {
-			logger.Error("send interact on response_url: %s", err)
+			slog.Error("send interact on response_url", "err", err)
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
-			logger.Error("discard interact body on response_url: %s", err)
+			slog.Error("discard interact body on response_url", "err", err)
 		}
 	}(cntxt.WithoutDeadline(ctx))
 }

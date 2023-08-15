@@ -3,11 +3,11 @@ package discord
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/url"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 )
 
 // ConfigureCommands with the API
@@ -36,14 +36,14 @@ func (a App) ConfigureCommands(ctx context.Context, commands map[string]Command)
 	for name, command := range commands {
 		for _, registerURL := range getRegisterURLs(command) {
 			absoluteURL := rootURL + registerURL
-			logger.WithField("command", name).Info("Configuring with URL `%s`", absoluteURL)
+			slog.Info("Configuring...", "url", absoluteURL, "command", name)
 
 			if _, err := discordRequest.Method(http.MethodPost).Path(absoluteURL).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
 				return fmt.Errorf("configure `%s` command: %w", name, err)
 			}
 		}
 
-		logger.Info("Command `%s` configured!", name)
+		slog.Info("Command configured", "command", name)
 	}
 
 	return nil

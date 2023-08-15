@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
@@ -19,7 +20,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	"github.com/ViBiOh/httputils/v4/pkg/logger"
 	"github.com/ViBiOh/httputils/v4/pkg/query"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/tracer"
@@ -108,18 +108,18 @@ func (a App) Handler() http.Handler {
 func (a App) checkSignature(r *http.Request) bool {
 	sig, err := hex.DecodeString(r.Header.Get("X-Signature-Ed25519"))
 	if err != nil {
-		logger.Warn("decode signature string: %s", err)
+		slog.Warn("decode signature string", "err", err)
 		return false
 	}
 
 	if len(sig) != ed25519.SignatureSize || sig[63]&224 != 0 {
-		logger.Warn("length of signature is invalid: %d", len(sig))
+		slog.Warn("length of signature is invalid", "length", len(sig))
 		return false
 	}
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		logger.Warn("read request body: %s", err)
+		slog.Warn("read request body", "err", err)
 		return false
 	}
 
@@ -165,12 +165,12 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 			resp, err := a.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
-				logger.Error("send async response: %s", err)
+				slog.Error("send async response", "err", err)
 				return
 			}
 
 			if err = request.DiscardBody(resp.Body); err != nil {
-				logger.Error("discard async body: %s", err)
+				slog.Error("discard async body", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}
@@ -229,7 +229,7 @@ func addAttachment(mw *multipart.Writer, file Attachment) error {
 
 	defer func() {
 		if closeErr := fileReader.Close(); closeErr != nil {
-			logger.Error("close file part: %s", closeErr)
+			slog.Error("close file part", "err", closeErr)
 		}
 	}()
 
