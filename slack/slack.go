@@ -22,7 +22,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -153,7 +153,7 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 		err     error
 	)
 
-	ctx, end := tracer.StartSpan(r.Context(), a.tracer, "interact")
+	ctx, end := telemetry.StartSpan(r.Context(), a.tracer, "interact")
 	defer end(&err)
 
 	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
@@ -166,7 +166,7 @@ func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
 	go func(ctx context.Context) {
 		var err error
 
-		ctx, end := tracer.StartSpan(ctx, a.tracer, "async_intereact")
+		ctx, end := telemetry.StartSpan(ctx, a.tracer, "async_intereact")
 		defer end(&err)
 
 		slackResponse := a.onInteract(ctx, payload)

@@ -22,7 +22,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/query"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
-	"github.com/ViBiOh/httputils/v4/pkg/tracer"
+	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -138,7 +138,7 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		err     error
 	)
 
-	ctx, end := tracer.StartSpan(r.Context(), a.tracer, "webhook")
+	ctx, end := telemetry.StartSpan(r.Context(), a.tracer, "webhook")
 	defer end(&err)
 
 	if err = httpjson.Parse(r, &message); err != nil {
@@ -158,7 +158,7 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		go func(ctx context.Context) {
 			var err error
 
-			ctx, end := tracer.StartSpan(ctx, a.tracer, "async_webhook")
+			ctx, end := telemetry.StartSpan(ctx, a.tracer, "async_webhook")
 			defer end(&err)
 
 			deferredResponse := asyncFn(ctx)
@@ -177,7 +177,7 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a App) send(ctx context.Context, method, path string, data InteractionDataResponse) (resp *http.Response, err error) {
-	ctx, end := tracer.StartSpan(ctx, a.tracer, "send")
+	ctx, end := telemetry.StartSpan(ctx, a.tracer, "send")
 	defer end(&err)
 
 	req := discordRequest.Method(method).Path(path)
