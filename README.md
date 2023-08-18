@@ -20,24 +20,14 @@ Be careful when using the CLI values, if someone list the processes on the syste
 
 ```bash
 Usage of discord:
-  -applicationID string
-        [discord] Application ID {DISCORD_APPLICATION_ID}
-  -clientID string
-        [discord] Client ID {DISCORD_CLIENT_ID}
-  -clientSecret string
-        [discord] Client Secret {DISCORD_CLIENT_SECRET}
-  -commands string
-        [commands] Configuration of commands, as JSON string {DISCORD_COMMANDS}
-  -loggerJson
-        [logger] Log format as JSON {DISCORD_LOGGER_JSON}
-  -loggerLevel string
-        [logger] Logger level {DISCORD_LOGGER_LEVEL} (default "INFO")
-  -loggerLevelKey string
-        [logger] Key for level in JSON {DISCORD_LOGGER_LEVEL_KEY} (default "level")
-  -loggerMessageKey string
-        [logger] Key for message in JSON {DISCORD_LOGGER_MESSAGE_KEY} (default "message")
-  -loggerTimeKey string
-        [logger] Key for timestamp in JSON {DISCORD_LOGGER_TIME_KEY} (default "time")
-  -publicKey string
-        [discord] Public Key {DISCORD_PUBLIC_KEY}
+  --applicationID     string  [discord] Application ID ${DISCORD_APPLICATION_ID}
+  --clientID          string  [discord] Client ID ${DISCORD_CLIENT_ID}
+  --clientSecret      string  [discord] Client Secret ${DISCORD_CLIENT_SECRET}
+  --commands          string  [commands] Configuration of commands, as JSON string ${DISCORD_COMMANDS}
+  --loggerJson                [logger] Log format as JSON ${DISCORD_LOGGER_JSON} (default false)
+  --loggerLevel       string  [logger] Logger level ${DISCORD_LOGGER_LEVEL} (default "INFO")
+  --loggerLevelKey    string  [logger] Key for level in JSON ${DISCORD_LOGGER_LEVEL_KEY} (default "level")
+  --loggerMessageKey  string  [logger] Key for message in JSON ${DISCORD_LOGGER_MESSAGE_KEY} (default "msg")
+  --loggerTimeKey     string  [logger] Key for timestamp in JSON ${DISCORD_LOGGER_TIME_KEY} (default "time")
+  --publicKey         string  [discord] Public Key ${DISCORD_PUBLIC_KEY}
 ```
