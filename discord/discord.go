@@ -61,7 +61,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, website string, handler OnMessage, tracer trace.Tracer) (App, error) {
+func New(config Config, website string, handler OnMessage, tracerProvider trace.TracerProvider) (App, error) {
 	publicKeyStr := *config.publicKey
 	if len(publicKeyStr) == 0 {
 		return App{}, nil
@@ -72,15 +72,20 @@ func New(config Config, website string, handler OnMessage, tracer trace.Tracer) 
 		return App{}, fmt.Errorf("decode public key string: %w", err)
 	}
 
-	return App{
-		tracer:        tracer,
+	app := App{
 		applicationID: *config.applicationID,
 		publicKey:     publicKey,
 		clientID:      *config.clientID,
 		clientSecret:  *config.clientSecret,
 		website:       website,
 		handler:       handler,
-	}, nil
+	}
+
+	if tracerProvider != nil {
+		app.tracer = tracerProvider.Tracer("discord")
+	}
+
+	return app, nil
 }
 
 // Handler for request. Should be use with net/http

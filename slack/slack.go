@@ -60,10 +60,8 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 }
 
 // New creates new App from Config
-func New(config Config, command CommandHandler, interact InteractHandler, tracer trace.Tracer) App {
-	return App{
-		tracer: tracer,
-
+func New(config Config, command CommandHandler, interact InteractHandler, tracerProvider trace.TracerProvider) App {
+	app := App{
 		clientID:      *config.clientID,
 		clientSecret:  *config.clientSecret,
 		signingSecret: []byte(*config.signingSecret),
@@ -71,6 +69,12 @@ func New(config Config, command CommandHandler, interact InteractHandler, tracer
 		onCommand:  command,
 		onInteract: interact,
 	}
+
+	if tracerProvider != nil {
+		app.tracer = tracerProvider.Tracer("slack")
+	}
+
+	return app
 }
 
 // Handler for net/http
