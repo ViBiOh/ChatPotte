@@ -86,20 +86,20 @@ func New(config Config, website string, handler OnMessage, tracerProvider trace.
 	return app, nil
 }
 
-func (a Service) Handler() http.Handler {
+func (s Service) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/oauth" {
-			a.handleOauth(w, r)
+			s.handleOauth(w, r)
 			return
 		}
 
-		if !a.checkSignature(r) {
+		if !s.checkSignature(r) {
 			httperror.Unauthorized(w, errors.New("invalid signature"))
 			return
 		}
 
 		if query.IsRoot(r) && r.Method == http.MethodPost {
-			a.handleWebhook(w, r)
+			s.handleWebhook(w, r)
 			return
 		}
 
@@ -107,7 +107,7 @@ func (a Service) Handler() http.Handler {
 	})
 }
 
-func (a Service) checkSignature(r *http.Request) bool {
+func (s Service) checkSignature(r *http.Request) bool {
 	sig, err := hex.DecodeString(r.Header.Get("X-Signature-Ed25519"))
 	if err != nil {
 		slog.Warn("decode signature string", "err", err)
@@ -131,16 +131,16 @@ func (a Service) checkSignature(r *http.Request) bool {
 	msg.WriteString(r.Header.Get("X-Signature-Timestamp"))
 	msg.Write(body)
 
-	return ed25519.Verify(a.publicKey, msg.Bytes(), sig)
+	return ed25519.Verify(s.publicKey, msg.Bytes(), sig)
 }
 
-func (a Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
+func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	var (
 		message InteractionRequest
 		err     error
 	)
 
-	ctx, end := telemetry.StartSpan(r.Context(), a.tracer, "webhook")
+	ctx, end := telemetry.StartSpan(r.Context(), s.tracer, "webhook")
 	defer end(&err)
 
 	if err = httpjson.Parse(r, &message); err != nil {
@@ -153,19 +153,19 @@ func (a Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, asyncFn := a.handler(ctx, message)
+	response, asyncFn := s.handler(ctx, message)
 	httpjson.Write(w, http.StatusOK, response)
 
 	if asyncFn != nil {
 		go func(ctx context.Context) {
 			var err error
 
-			ctx, end := telemetry.StartSpan(ctx, a.tracer, "async_webhook")
+			ctx, end := telemetry.StartSpan(ctx, s.tracer, "async_webhook")
 			defer end(&err)
 
 			deferredResponse := asyncFn(ctx)
 
-			resp, err := a.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", a.applicationID, message.Token), deferredResponse.Data)
+			resp, err := s.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", s.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
 				slog.Error("send async response", "err", err)
 				return
@@ -178,8 +178,8 @@ func (a Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a Service) send(ctx context.Context, method, path string, data InteractionDataResponse) (resp *http.Response, err error) {
-	ctx, end := telemetry.StartSpan(ctx, a.tracer, "send")
+func (s Service) send(ctx context.Context, method, path string, data InteractionDataResponse) (resp *http.Response, err error) {
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "send")
 	defer end(&err)
 
 	req := discordRequest.Method(method).Path(path)

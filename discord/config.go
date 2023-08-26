@@ -11,8 +11,8 @@ import (
 )
 
 // ConfigureCommands with the API
-func (a Service) ConfigureCommands(ctx context.Context, commands map[string]Command) error {
-	if len(a.applicationID) == 0 {
+func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Command) error {
+	if len(s.applicationID) == 0 {
 		return nil
 	}
 
@@ -20,7 +20,7 @@ func (a Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 	data.Add("grant_type", "client_credentials")
 	data.Add("scope", "applications.commands.update")
 
-	resp, err := discordRequest.Method(http.MethodPost).Path("/oauth2/token").BasicAuth(a.clientID, a.clientSecret).Form(ctx, data)
+	resp, err := discordRequest.Method(http.MethodPost).Path("/oauth2/token").BasicAuth(s.clientID, s.clientSecret).Form(ctx, data)
 	if err != nil {
 		return fmt.Errorf("get token: %w", err)
 	}
@@ -31,7 +31,7 @@ func (a Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 	}
 
 	bearer := content["access_token"].(string)
-	rootURL := fmt.Sprintf("/applications/%s", a.applicationID)
+	rootURL := fmt.Sprintf("/applications/%s", s.applicationID)
 
 	for name, command := range commands {
 		for _, registerURL := range getRegisterURLs(command) {

@@ -75,14 +75,14 @@ func New(config Config, command CommandHandler, interact InteractHandler, tracer
 	return app
 }
 
-func (a Service) Handler() http.Handler {
+func (s Service) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/oauth" {
-			a.handleOauth(w, r)
+			s.handleOauth(w, r)
 			return
 		}
 
-		if !a.checkSignature(r) {
+		if !s.checkSignature(r) {
 			httperror.Unauthorized(w, errors.New("invalid signature"))
 			return
 		}
@@ -93,7 +93,7 @@ func (a Service) Handler() http.Handler {
 
 		case http.MethodPost:
 			if r.URL.Path == "/interactive" {
-				a.handleInteract(w, r)
+				s.handleInteract(w, r)
 			} else {
 				payload := SlashPayload{
 					ChannelID:   r.FormValue("channel_id"),
@@ -104,7 +104,7 @@ func (a Service) Handler() http.Handler {
 					UserID:      r.FormValue("user_id"),
 				}
 
-				httpjson.Write(w, http.StatusOK, a.onCommand(r.Context(), payload))
+				httpjson.Write(w, http.StatusOK, s.onCommand(r.Context(), payload))
 			}
 
 		default:
@@ -113,7 +113,7 @@ func (a Service) Handler() http.Handler {
 	})
 }
 
-func (a Service) checkSignature(r *http.Request) bool {
+func (s Service) checkSignature(r *http.Request) bool {
 	tsValue, err := strconv.ParseInt(r.Header.Get("X-Slack-Request-Timestamp"), 10, 64)
 	if err != nil {
 		slog.Error("parse timestamp", "err", err)
@@ -136,7 +136,7 @@ func (a Service) checkSignature(r *http.Request) bool {
 	slackSignature := r.Header.Get("X-Slack-Signature")
 	signatureValue := []byte(fmt.Sprintf("v0:%d:%s", tsValue, body))
 
-	sig := hmac.New(sha256.New, a.signingSecret)
+	sig := hmac.New(sha256.New, s.signingSecret)
 	sig.Write(signatureValue)
 	ownSignature := fmt.Sprintf("v0=%s", hex.EncodeToString(sig.Sum(nil)))
 
@@ -148,13 +148,13 @@ func (a Service) checkSignature(r *http.Request) bool {
 	return false
 }
 
-func (a Service) handleInteract(w http.ResponseWriter, r *http.Request) {
+func (s Service) handleInteract(w http.ResponseWriter, r *http.Request) {
 	var (
 		payload InteractivePayload
 		err     error
 	)
 
-	ctx, end := telemetry.StartSpan(r.Context(), a.tracer, "interact")
+	ctx, end := telemetry.StartSpan(r.Context(), s.tracer, "interact")
 	defer end(&err)
 
 	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
@@ -167,10 +167,10 @@ func (a Service) handleInteract(w http.ResponseWriter, r *http.Request) {
 	go func(ctx context.Context) {
 		var err error
 
-		ctx, end := telemetry.StartSpan(ctx, a.tracer, "async_intereact")
+		ctx, end := telemetry.StartSpan(ctx, s.tracer, "async_intereact")
 		defer end(&err)
 
-		slackResponse := a.onInteract(ctx, payload)
+		slackResponse := s.onInteract(ctx, payload)
 
 		resp, err := request.Post(payload.ResponseURL).StreamJSON(ctx, slackResponse)
 		if err != nil {

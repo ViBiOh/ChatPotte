@@ -9,13 +9,13 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 )
 
-func (a Service) handleOauth(w http.ResponseWriter, r *http.Request) {
+func (s Service) handleOauth(w http.ResponseWriter, r *http.Request) {
 	params := url.Values{}
 	params.Set("code", r.URL.Query().Get("code"))
-	params.Set("client_id", a.clientID)
-	params.Set("client_secret", a.clientSecret)
+	params.Set("client_id", s.clientID)
+	params.Set("client_secret", s.clientSecret)
 	params.Set("grant_type", "authorization_code")
-	params.Set("redirect_uri", a.website)
+	params.Set("redirect_uri", s.website)
 
 	resp, err := discordRequest.Path("/oauth2/token").Method(http.MethodPost).Form(r.Context(), params)
 	if err != nil {
@@ -28,5 +28,5 @@ func (a Service) handleOauth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, a.website, http.StatusFound)
+	http.Redirect(w, r, s.website, http.StatusFound)
 }

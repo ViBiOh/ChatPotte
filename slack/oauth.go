@@ -20,11 +20,11 @@ type slackOauthReponse struct {
 	} `json:"team"`
 }
 
-func (a Service) handleOauth(w http.ResponseWriter, r *http.Request) {
+func (s Service) handleOauth(w http.ResponseWriter, r *http.Request) {
 	params := url.Values{}
 	params.Set("code", r.URL.Query().Get("code"))
-	params.Set("client_id", a.clientID)
-	params.Set("client_secret", a.clientSecret)
+	params.Set("client_id", s.clientID)
+	params.Set("client_secret", s.clientSecret)
 
 	resp, err := request.Post(slackOauthURL).Form(r.Context(), params)
 	if err != nil {
