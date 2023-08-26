@@ -9,7 +9,7 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 )
 
-func (a App) handleOauth(w http.ResponseWriter, r *http.Request) {
+func (a Service) handleOauth(w http.ResponseWriter, r *http.Request) {
 	params := url.Values{}
 	params.Set("code", r.URL.Query().Get("code"))
 	params.Set("client_id", a.clientID)

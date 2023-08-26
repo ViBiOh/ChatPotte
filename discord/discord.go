@@ -31,8 +31,7 @@ type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, f
 
 var discordRequest = request.New().URL("https://discord.com/api/v8")
 
-// App of package
-type App struct {
+type Service struct {
 	tracer        trace.Tracer
 	handler       OnMessage
 	applicationID string
@@ -42,41 +41,40 @@ type App struct {
 	publicKey     []byte
 }
 
-// Config of package
 type Config struct {
-	applicationID *string
-	publicKey     *string
-	clientID      *string
-	clientSecret  *string
+	ApplicationID string
+	PublicKey     string
+	ClientID      string
+	ClientSecret  string
 }
 
-// Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		applicationID: flags.New("ApplicationID", "Application ID").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
-		publicKey:     flags.New("PublicKey", "Public Key").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
-		clientID:      flags.New("ClientID", "Client ID").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
-		clientSecret:  flags.New("ClientSecret", "Client Secret").Prefix(prefix).DocPrefix("discord").String(fs, "", overrides),
-	}
+	var config Config
+
+	flags.New("ApplicationID", "Application ID").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ApplicationID, "", overrides)
+	flags.New("PublicKey", "Public Key").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.PublicKey, "", overrides)
+	flags.New("ClientID", "Client ID").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ClientID, "", overrides)
+	flags.New("ClientSecret", "Client Secret").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ClientSecret, "", overrides)
+
+	return config
 }
 
-// New creates new App from Config
-func New(config Config, website string, handler OnMessage, tracerProvider trace.TracerProvider) (App, error) {
-	publicKeyStr := *config.publicKey
+func New(config Config, website string, handler OnMessage, tracerProvider trace.TracerProvider) (Service, error) {
+	publicKeyStr := config.PublicKey
 	if len(publicKeyStr) == 0 {
-		return App{}, nil
+		return Service{}, nil
 	}
 
 	publicKey, err := hex.DecodeString(publicKeyStr)
 	if err != nil {
-		return App{}, fmt.Errorf("decode public key string: %w", err)
+		return Service{}, fmt.Errorf("decode public key string: %w", err)
 	}
 
-	app := App{
-		applicationID: *config.applicationID,
+	app := Service{
+		applicationID: config.ApplicationID,
 		publicKey:     publicKey,
-		clientID:      *config.clientID,
-		clientSecret:  *config.clientSecret,
+		clientID:      config.ClientID,
+		clientSecret:  config.ClientSecret,
 		website:       website,
 		handler:       handler,
 	}
@@ -88,8 +86,7 @@ func New(config Config, website string, handler OnMessage, tracerProvider trace.
 	return app, nil
 }
 
-// Handler for request. Should be use with net/http
-func (a App) Handler() http.Handler {
+func (a Service) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/oauth" {
 			a.handleOauth(w, r)
@@ -110,7 +107,7 @@ func (a App) Handler() http.Handler {
 	})
 }
 
-func (a App) checkSignature(r *http.Request) bool {
+func (a Service) checkSignature(r *http.Request) bool {
 	sig, err := hex.DecodeString(r.Header.Get("X-Signature-Ed25519"))
 	if err != nil {
 		slog.Warn("decode signature string", "err", err)
@@ -137,7 +134,7 @@ func (a App) checkSignature(r *http.Request) bool {
 	return ed25519.Verify(a.publicKey, msg.Bytes(), sig)
 }
 
-func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
+func (a Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	var (
 		message InteractionRequest
 		err     error
@@ -181,7 +178,7 @@ func (a App) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a App) send(ctx context.Context, method, path string, data InteractionDataResponse) (resp *http.Response, err error) {
+func (a Service) send(ctx context.Context, method, path string, data InteractionDataResponse) (resp *http.Response, err error) {
 	ctx, end := telemetry.StartSpan(ctx, a.tracer, "send")
 	defer end(&err)
 

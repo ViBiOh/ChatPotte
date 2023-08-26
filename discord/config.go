@@ -11,7 +11,7 @@ import (
 )
 
 // ConfigureCommands with the API
-func (a App) ConfigureCommands(ctx context.Context, commands map[string]Command) error {
+func (a Service) ConfigureCommands(ctx context.Context, commands map[string]Command) error {
 	if len(a.applicationID) == 0 {
 		return nil
 	}

@@ -32,15 +32,13 @@ type CommandHandler func(context.Context, SlashPayload) Response
 // InteractHandler for handling when user interact with a button
 type InteractHandler func(context.Context, InteractivePayload) Response
 
-// Config of package
 type Config struct {
-	clientID      *string
-	clientSecret  *string
-	signingSecret *string
+	ClientID      string
+	ClientSecret  string
+	SigningSecret string
 }
 
-// App of package
-type App struct {
+type Service struct {
 	tracer     trace.Tracer
 	onCommand  CommandHandler
 	onInteract InteractHandler
@@ -50,21 +48,21 @@ type App struct {
 	signingSecret []byte
 }
 
-// Flags adds flags for configuring package
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
-	return Config{
-		clientID:      flags.New("ClientID", "ClientID").Prefix(prefix).DocPrefix("slack").String(fs, "", overrides),
-		clientSecret:  flags.New("ClientSecret", "ClientSecret").Prefix(prefix).DocPrefix("slack").String(fs, "", overrides),
-		signingSecret: flags.New("SigningSecret", "Signing secret").Prefix(prefix).DocPrefix("slack").String(fs, "", overrides),
-	}
+	var config Config
+
+	flags.New("ClientID", "ClientID").Prefix(prefix).DocPrefix("slack").StringVar(fs, &config.ClientID, "", overrides)
+	flags.New("ClientSecret", "ClientSecret").Prefix(prefix).DocPrefix("slack").StringVar(fs, &config.ClientSecret, "", overrides)
+	flags.New("SigningSecret", "Signing secret").Prefix(prefix).DocPrefix("slack").StringVar(fs, &config.SigningSecret, "", overrides)
+
+	return config
 }
 
-// New creates new App from Config
-func New(config Config, command CommandHandler, interact InteractHandler, tracerProvider trace.TracerProvider) App {
-	app := App{
-		clientID:      *config.clientID,
-		clientSecret:  *config.clientSecret,
-		signingSecret: []byte(*config.signingSecret),
+func New(config Config, command CommandHandler, interact InteractHandler, tracerProvider trace.TracerProvider) Service {
+	app := Service{
+		clientID:      config.ClientID,
+		clientSecret:  config.ClientSecret,
+		signingSecret: []byte(config.SigningSecret),
 
 		onCommand:  command,
 		onInteract: interact,
@@ -77,8 +75,7 @@ func New(config Config, command CommandHandler, interact InteractHandler, tracer
 	return app
 }
 
-// Handler for net/http
-func (a App) Handler() http.Handler {
+func (a Service) Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/oauth" {
 			a.handleOauth(w, r)
@@ -116,7 +113,7 @@ func (a App) Handler() http.Handler {
 	})
 }
 
-func (a App) checkSignature(r *http.Request) bool {
+func (a Service) checkSignature(r *http.Request) bool {
 	tsValue, err := strconv.ParseInt(r.Header.Get("X-Slack-Request-Timestamp"), 10, 64)
 	if err != nil {
 		slog.Error("parse timestamp", "err", err)
@@ -151,7 +148,7 @@ func (a App) checkSignature(r *http.Request) bool {
 	return false
 }
 
-func (a App) handleInteract(w http.ResponseWriter, r *http.Request) {
+func (a Service) handleInteract(w http.ResponseWriter, r *http.Request) {
 	var (
 		payload InteractivePayload
 		err     error
