@@ -48,17 +48,17 @@ type Service struct {
 	signingSecret []byte
 }
 
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
 	flags.New("ClientID", "ClientID").Prefix(prefix).DocPrefix("slack").StringVar(fs, &config.ClientID, "", overrides)
 	flags.New("ClientSecret", "ClientSecret").Prefix(prefix).DocPrefix("slack").StringVar(fs, &config.ClientSecret, "", overrides)
 	flags.New("SigningSecret", "Signing secret").Prefix(prefix).DocPrefix("slack").StringVar(fs, &config.SigningSecret, "", overrides)
 
-	return config
+	return &config
 }
 
-func New(config Config, command CommandHandler, interact InteractHandler, tracerProvider trace.TracerProvider) Service {
+func New(config *Config, command CommandHandler, interact InteractHandler, tracerProvider trace.TracerProvider) Service {
 	app := Service{
 		clientID:      config.ClientID,
 		clientSecret:  config.ClientSecret,

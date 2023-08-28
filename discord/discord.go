@@ -48,7 +48,7 @@ type Config struct {
 	ClientSecret  string
 }
 
-func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config {
+func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
 	var config Config
 
 	flags.New("ApplicationID", "Application ID").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ApplicationID, "", overrides)
@@ -56,10 +56,10 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) Config 
 	flags.New("ClientID", "Client ID").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ClientID, "", overrides)
 	flags.New("ClientSecret", "Client Secret").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ClientSecret, "", overrides)
 
-	return config
+	return &config
 }
 
-func New(config Config, website string, handler OnMessage, tracerProvider trace.TracerProvider) (Service, error) {
+func New(config *Config, website string, handler OnMessage, tracerProvider trace.TracerProvider) (Service, error) {
 	publicKeyStr := config.PublicKey
 	if len(publicKeyStr) == 0 {
 		return Service{}, nil
