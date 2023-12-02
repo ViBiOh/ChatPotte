@@ -94,7 +94,7 @@ func (s Service) Handler() http.Handler {
 		}
 
 		if !s.checkSignature(r) {
-			httperror.Unauthorized(w, errors.New("invalid signature"))
+			httperror.Unauthorized(r.Context(), w, errors.New("invalid signature"))
 			return
 		}
 
@@ -103,25 +103,25 @@ func (s Service) Handler() http.Handler {
 			return
 		}
 
-		httperror.NotFound(w)
+		httperror.NotFound(r.Context(), w)
 	})
 }
 
 func (s Service) checkSignature(r *http.Request) bool {
 	sig, err := hex.DecodeString(r.Header.Get("X-Signature-Ed25519"))
 	if err != nil {
-		slog.Warn("decode signature string", "err", err)
+		slog.WarnContext(r.Context(), "decode signature string", "err", err)
 		return false
 	}
 
 	if len(sig) != ed25519.SignatureSize || sig[63]&224 != 0 {
-		slog.Warn("length of signature is invalid", "length", len(sig))
+		slog.WarnContext(r.Context(), "length of signature is invalid", "length", len(sig))
 		return false
 	}
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		slog.Warn("read request body", "err", err)
+		slog.WarnContext(r.Context(), "read request body", "err", err)
 		return false
 	}
 
@@ -144,17 +144,17 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	defer end(&err)
 
 	if err = httpjson.Parse(r, &message); err != nil {
-		httperror.BadRequest(w, err)
+		httperror.BadRequest(r.Context(), w, err)
 		return
 	}
 
 	if message.Type == pingInteraction {
-		httpjson.Write(w, http.StatusOK, InteractionResponse{Type: pongCallback})
+		httpjson.Write(r.Context(), w, http.StatusOK, InteractionResponse{Type: pongCallback})
 		return
 	}
 
 	response, asyncFn := s.handler(ctx, message)
-	httpjson.Write(w, http.StatusOK, response)
+	httpjson.Write(r.Context(), w, http.StatusOK, response)
 
 	if asyncFn != nil {
 		go func(ctx context.Context) {
@@ -167,12 +167,12 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 			resp, err := s.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", s.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
-				slog.Error("send async response", "err", err)
+				slog.ErrorContext(ctx, "send async response", "err", err)
 				return
 			}
 
 			if err = request.DiscardBody(resp.Body); err != nil {
-				slog.Error("discard async body", "err", err)
+				slog.ErrorContext(ctx, "discard async body", "err", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}

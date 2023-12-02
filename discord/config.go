@@ -36,14 +36,14 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 	for name, command := range commands {
 		for _, registerURL := range getRegisterURLs(command) {
 			absoluteURL := rootURL + registerURL
-			slog.Info("Configuring...", "url", absoluteURL, "command", name)
+			slog.InfoContext(ctx, "Configuring...", "url", absoluteURL, "command", name)
 
 			if _, err := discordRequest.Method(http.MethodPost).Path(absoluteURL).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
 				return fmt.Errorf("configure `%s` command: %w", name, err)
 			}
 		}
 
-		slog.Info("Command configured", "command", name)
+		slog.InfoContext(ctx, "Command configured", "command", name)
 	}
 
 	return nil

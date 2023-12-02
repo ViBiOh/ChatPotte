@@ -83,7 +83,7 @@ func (s Service) Handler() http.Handler {
 		}
 
 		if !s.checkSignature(r) {
-			httperror.Unauthorized(w, errors.New("invalid signature"))
+			httperror.Unauthorized(r.Context(), w, errors.New("invalid signature"))
 			return
 		}
 
@@ -104,7 +104,7 @@ func (s Service) Handler() http.Handler {
 					UserID:      r.FormValue("user_id"),
 				}
 
-				httpjson.Write(w, http.StatusOK, s.onCommand(r.Context(), payload))
+				httpjson.Write(r.Context(), w, http.StatusOK, s.onCommand(r.Context(), payload))
 			}
 
 		default:
@@ -116,18 +116,18 @@ func (s Service) Handler() http.Handler {
 func (s Service) checkSignature(r *http.Request) bool {
 	tsValue, err := strconv.ParseInt(r.Header.Get("X-Slack-Request-Timestamp"), 10, 64)
 	if err != nil {
-		slog.Error("parse timestamp", "err", err)
+		slog.ErrorContext(r.Context(), "parse timestamp", "err", err)
 		return false
 	}
 
 	if time.Unix(tsValue, 0).Before(time.Now().Add(time.Minute * -5)) {
-		slog.Warn("timestamp is from 5 minutes ago")
+		slog.WarnContext(r.Context(), "timestamp is from 5 minutes ago")
 		return false
 	}
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		slog.Warn("read request body", "err", err)
+		slog.WarnContext(r.Context(), "read request body", "err", err)
 		return false
 	}
 
@@ -144,7 +144,7 @@ func (s Service) checkSignature(r *http.Request) bool {
 		return true
 	}
 
-	slog.Error("signature mismatch from slack's one", "slack_signature", slackSignature)
+	slog.ErrorContext(r.Context(), "signature mismatch from slack's one", "slack_signature", slackSignature)
 	return false
 }
 
@@ -158,7 +158,7 @@ func (s Service) handleInteract(w http.ResponseWriter, r *http.Request) {
 	defer end(&err)
 
 	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
-		httpjson.Write(w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
+		httpjson.Write(r.Context(), w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
 		return
 	}
 
@@ -174,9 +174,9 @@ func (s Service) handleInteract(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := request.Post(payload.ResponseURL).StreamJSON(ctx, slackResponse)
 		if err != nil {
-			slog.Error("send interact on response_url", "err", err)
+			slog.ErrorContext(r.Context(), "send interact on response_url", "err", err)
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
-			slog.Error("discard interact body on response_url", "err", err)
+			slog.ErrorContext(r.Context(), "discard interact body on response_url", "err", err)
 		}
 	}(cntxt.WithoutDeadline(ctx))
 }
