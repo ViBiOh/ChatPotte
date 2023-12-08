@@ -116,7 +116,7 @@ func (s Service) Handler() http.Handler {
 func (s Service) checkSignature(r *http.Request) bool {
 	tsValue, err := strconv.ParseInt(r.Header.Get("X-Slack-Request-Timestamp"), 10, 64)
 	if err != nil {
-		slog.ErrorContext(r.Context(), "parse timestamp", "err", err)
+		slog.ErrorContext(r.Context(), "parse timestamp", "error", err)
 		return false
 	}
 
@@ -127,7 +127,7 @@ func (s Service) checkSignature(r *http.Request) bool {
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		slog.WarnContext(r.Context(), "read request body", "err", err)
+		slog.WarnContext(r.Context(), "read request body", "error", err)
 		return false
 	}
 
@@ -174,9 +174,9 @@ func (s Service) handleInteract(w http.ResponseWriter, r *http.Request) {
 
 		resp, err := request.Post(payload.ResponseURL).StreamJSON(ctx, slackResponse)
 		if err != nil {
-			slog.ErrorContext(r.Context(), "send interact on response_url", "err", err)
+			slog.ErrorContext(r.Context(), "send interact on response_url", "error", err)
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
-			slog.ErrorContext(r.Context(), "discard interact body on response_url", "err", err)
+			slog.ErrorContext(r.Context(), "discard interact body on response_url", "error", err)
 		}
 	}(cntxt.WithoutDeadline(ctx))
 }

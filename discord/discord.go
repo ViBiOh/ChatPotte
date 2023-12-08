@@ -110,7 +110,7 @@ func (s Service) Handler() http.Handler {
 func (s Service) checkSignature(r *http.Request) bool {
 	sig, err := hex.DecodeString(r.Header.Get("X-Signature-Ed25519"))
 	if err != nil {
-		slog.WarnContext(r.Context(), "decode signature string", "err", err)
+		slog.WarnContext(r.Context(), "decode signature string", "error", err)
 		return false
 	}
 
@@ -121,7 +121,7 @@ func (s Service) checkSignature(r *http.Request) bool {
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		slog.WarnContext(r.Context(), "read request body", "err", err)
+		slog.WarnContext(r.Context(), "read request body", "error", err)
 		return false
 	}
 
@@ -167,12 +167,12 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 			resp, err := s.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", s.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
-				slog.ErrorContext(ctx, "send async response", "err", err)
+				slog.ErrorContext(ctx, "send async response", "error", err)
 				return
 			}
 
 			if err = request.DiscardBody(resp.Body); err != nil {
-				slog.ErrorContext(ctx, "discard async body", "err", err)
+				slog.ErrorContext(ctx, "discard async body", "error", err)
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}
@@ -231,7 +231,7 @@ func addAttachment(mw *multipart.Writer, file Attachment) error {
 
 	defer func() {
 		if closeErr := fileReader.Close(); closeErr != nil {
-			slog.Error("close file part", "err", closeErr)
+			slog.Error("close file part", "error", closeErr)
 		}
 	}()
 

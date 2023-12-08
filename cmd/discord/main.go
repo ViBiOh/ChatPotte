@@ -31,18 +31,18 @@ func main() {
 
 	discordApp, err := discord.New(discordConfig, "", nil, nil)
 	if err != nil {
-		slog.ErrorContext(ctx, "create discord", "err", err)
+		slog.ErrorContext(ctx, "create discord", "error", err)
 		os.Exit(1)
 	}
 
 	var commands map[string]discord.Command
 	if err := json.Unmarshal([]byte(*configuration), &commands); err != nil {
-		slog.ErrorContext(ctx, "parse configuration", "err", err)
+		slog.ErrorContext(ctx, "parse configuration", "error", err)
 		os.Exit(1)
 	}
 
 	if err := discordApp.ConfigureCommands(ctx, commands); err != nil {
-		slog.ErrorContext(ctx, "configure command", "err", err)
+		slog.ErrorContext(ctx, "configure command", "error", err)
 		os.Exit(1)
 	}
 }
