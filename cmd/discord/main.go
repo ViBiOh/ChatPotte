@@ -30,10 +30,7 @@ func main() {
 	ctx := context.Background()
 
 	discordApp, err := discord.New(discordConfig, "", nil, nil)
-	if err != nil {
-		slog.ErrorContext(ctx, "create discord", "error", err)
-		os.Exit(1)
-	}
+	logger.FatalfOnErr(ctx, err, "create discord")
 
 	var commands map[string]discord.Command
 	if err := json.Unmarshal([]byte(*configuration), &commands); err != nil {
