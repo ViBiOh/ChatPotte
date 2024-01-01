@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 )
@@ -38,7 +39,15 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 			absoluteURL := rootURL + registerURL
 			slog.InfoContext(ctx, "Configuring...", "url", absoluteURL, "command", name)
 
-			if _, err := discordRequest.Method(http.MethodPost).Path(absoluteURL).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
+		configure:
+			if resp, err := discordRequest.Method(http.MethodPost).Path(absoluteURL).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
+				if resp.StatusCode == http.StatusTooManyRequests {
+					slog.InfoContext(ctx, "Rate-limited, waiting 5 seconds before retrying...")
+					time.Sleep(time.Second * 5)
+
+					goto configure
+				}
+
 				return fmt.Errorf("configure `%s` command: %w", name, err)
 			}
 		}
