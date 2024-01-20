@@ -1,6 +1,7 @@
 package discord
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 )
@@ -274,7 +275,7 @@ type Component struct {
 // NewButton creates a new button
 func NewButton(style buttonStyle, label, customID string) Component {
 	if len(customID) > customIDMaxLen {
-		slog.Warn("`custom_id` exceeds max characters", "max", customIDMaxLen)
+		slog.LogAttrs(context.Background(), slog.LevelWarn, "`custom_id` exceeds max characters", slog.Int("max", customIDMaxLen))
 	}
 
 	return Component{

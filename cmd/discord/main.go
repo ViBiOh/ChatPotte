@@ -34,12 +34,12 @@ func main() {
 
 	var commands map[string]discord.Command
 	if err := json.Unmarshal([]byte(*configuration), &commands); err != nil {
-		slog.ErrorContext(ctx, "parse configuration", "error", err)
+		slog.LogAttrs(ctx, slog.LevelError, "parse configuration", slog.Any("error", err))
 		os.Exit(1)
 	}
 
 	if err := discordApp.ConfigureCommands(ctx, commands); err != nil {
-		slog.ErrorContext(ctx, "configure command", "error", err)
+		slog.LogAttrs(ctx, slog.LevelError, "configure command", slog.Any("error", err))
 		os.Exit(1)
 	}
 }

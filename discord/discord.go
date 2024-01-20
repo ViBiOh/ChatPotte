@@ -110,18 +110,18 @@ func (s Service) Handler() http.Handler {
 func (s Service) checkSignature(r *http.Request) bool {
 	sig, err := hex.DecodeString(r.Header.Get("X-Signature-Ed25519"))
 	if err != nil {
-		slog.WarnContext(r.Context(), "decode signature string", "error", err)
+		slog.LogAttrs(r.Context(), slog.LevelWarn, "decode signature string", slog.Any("error", err))
 		return false
 	}
 
 	if len(sig) != ed25519.SignatureSize || sig[63]&224 != 0 {
-		slog.WarnContext(r.Context(), "length of signature is invalid", "length", len(sig))
+		slog.LogAttrs(r.Context(), slog.LevelWarn, "length of signature is invalid", slog.Int("length", len(sig)))
 		return false
 	}
 
 	body, err := request.ReadBodyRequest(r)
 	if err != nil {
-		slog.WarnContext(r.Context(), "read request body", "error", err)
+		slog.LogAttrs(r.Context(), slog.LevelWarn, "read request body", slog.Any("error", err))
 		return false
 	}
 
@@ -167,12 +167,12 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 
 			resp, err := s.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", s.applicationID, message.Token), deferredResponse.Data)
 			if err != nil {
-				slog.ErrorContext(ctx, "send async response", "error", err)
+				slog.LogAttrs(ctx, slog.LevelError, "send async response", slog.Any("error", err))
 				return
 			}
 
 			if err = request.DiscardBody(resp.Body); err != nil {
-				slog.ErrorContext(ctx, "discard async body", "error", err)
+				slog.LogAttrs(ctx, slog.LevelError, "discard async body", slog.Any("error", err))
 			}
 		}(cntxt.WithoutDeadline(ctx))
 	}
@@ -231,7 +231,7 @@ func addAttachment(mw *multipart.Writer, file Attachment) error {
 
 	defer func() {
 		if closeErr := fileReader.Close(); closeErr != nil {
-			slog.Error("close file part", "error", closeErr)
+			slog.LogAttrs(context.Background(), slog.LevelError, "close file part", slog.Any("error", closeErr))
 		}
 	}()
 
