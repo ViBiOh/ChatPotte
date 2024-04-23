@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"log"
 	"log/slog"
 	"os"
 
@@ -21,9 +20,7 @@ func main() {
 	discordConfig := discord.Flags(fs, "")
 	configuration := flags.New("", "Configuration of commands, as JSON string").Prefix("commands").String(fs, "", nil)
 
-	if err := fs.Parse(os.Args[1:]); err != nil {
-		log.Fatal(err)
-	}
+	_ = fs.Parse(os.Args[1:])
 
 	logger.Init(loggerConfig)
 
