@@ -37,22 +37,21 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 	for name, command := range commands {
 		for _, registerURL := range getRegisterURLs(command) {
 			absoluteURL := rootURL + registerURL
-			slog.LogAttrs(ctx, slog.LevelInfo, "Configuring...", slog.String("url", absoluteURL), slog.String("command", name))
 
 		configure:
 			if resp, err := discordRequest.Method(http.MethodPost).Path(absoluteURL).Header("Authorization", fmt.Sprintf("Bearer %s", bearer)).StreamJSON(ctx, command); err != nil {
 				if resp.StatusCode == http.StatusTooManyRequests {
-					slog.InfoContext(ctx, "Rate-limited, waiting 5 seconds before retrying...")
+					slog.LogAttrs(ctx, slog.LevelWarn, "Rate-limited, waiting 5 seconds before retrying...", slog.String("url", absoluteURL))
 					time.Sleep(time.Second * 5)
 
 					goto configure
 				}
 
-				return fmt.Errorf("configure `%s` command: %w", name, err)
+				return fmt.Errorf("configure `%s` command for url `%s`: %w", name, registerURL, err)
 			}
 		}
 
-		slog.LogAttrs(ctx, slog.LevelInfo, "Command configured", slog.String("command", name))
+		slog.LogAttrs(ctx, slog.LevelInfo, fmt.Sprintf("Command `%s` configured!", name))
 	}
 
 	return nil
