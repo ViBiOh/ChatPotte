@@ -22,9 +22,9 @@ func main() {
 
 	_ = fs.Parse(os.Args[1:])
 
-	logger.Init(loggerConfig)
-
 	ctx := context.Background()
+
+	logger.Init(ctx, loggerConfig)
 
 	discordApp, err := discord.New(discordConfig, "", nil, nil)
 	logger.FatalfOnErr(ctx, err, "create discord")
