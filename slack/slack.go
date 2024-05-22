@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/ViBiOh/flags"
-	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
@@ -178,5 +177,5 @@ func (s Service) handleInteract(w http.ResponseWriter, r *http.Request) {
 		} else if discardErr := request.DiscardBody(resp.Body); discardErr != nil {
 			slog.LogAttrs(ctx, slog.LevelError, "discard interact body on response_url", slog.Any("error", err))
 		}
-	}(cntxt.WithoutDeadline(ctx))
+	}(context.WithoutCancel(ctx))
 }
