@@ -17,7 +17,6 @@ import (
 	"os"
 
 	"github.com/ViBiOh/flags"
-	"github.com/ViBiOh/httputils/v4/pkg/cntxt"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 	"github.com/ViBiOh/httputils/v4/pkg/query"
@@ -174,7 +173,7 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 			if err = request.DiscardBody(resp.Body); err != nil {
 				slog.LogAttrs(ctx, slog.LevelError, "discard async body", slog.Any("error", err))
 			}
-		}(cntxt.WithoutDeadline(ctx))
+		}(context.WithoutCancel(ctx))
 	}
 }
 
