@@ -11,7 +11,6 @@ import (
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
 )
 
-// ConfigureCommands with the API
 func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Command) error {
 	if len(s.applicationID) == 0 {
 		return nil

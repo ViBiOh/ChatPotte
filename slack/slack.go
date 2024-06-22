@@ -25,11 +25,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// CommandHandler for handling when user send a slash command
-type CommandHandler func(context.Context, SlashPayload) Response
-
-// InteractHandler for handling when user interact with a button
-type InteractHandler func(context.Context, InteractivePayload) Response
+type (
+	CommandHandler  func(context.Context, SlashPayload) Response
+	InteractHandler func(context.Context, InteractivePayload) Response
+)
 
 type Config struct {
 	ClientID      string
@@ -74,42 +73,44 @@ func New(config *Config, command CommandHandler, interact InteractHandler, trace
 	return app
 }
 
-func (s Service) Handler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/oauth" {
-			s.handleOauth(w, r)
-			return
-		}
+func (s Service) NewServeMux() *http.ServeMux {
+	mux := http.NewServeMux()
 
-		if !s.checkSignature(r) {
-			httperror.Unauthorized(r.Context(), w, errors.New("invalid signature"))
-			return
-		}
+	mux.HandleFunc("OPTIONS /", s.handleOptions)
+	mux.HandleFunc("GET /oauth", s.handleOauth)
+	mux.HandleFunc("POST /interactive", s.handleInteract)
+	mux.HandleFunc("POST /", s.handleCommand)
 
-		switch r.Method {
-		case http.MethodOptions:
-			w.WriteHeader(http.StatusOK)
+	return mux
+}
 
-		case http.MethodPost:
-			if r.URL.Path == "/interactive" {
-				s.handleInteract(w, r)
-			} else {
-				payload := SlashPayload{
-					ChannelID:   r.FormValue("channel_id"),
-					Command:     strings.TrimPrefix(r.FormValue("command"), "/"),
-					ResponseURL: r.FormValue("response_url"),
-					Text:        r.FormValue("text"),
-					Token:       r.FormValue("token"),
-					UserID:      r.FormValue("user_id"),
-				}
+func (s Service) handleOptions(w http.ResponseWriter, r *http.Request) {
+	if !s.checkSignature(r) {
+		httperror.Unauthorized(r.Context(), w, errors.New("invalid signature"))
+		return
+	}
 
-				httpjson.Write(r.Context(), w, http.StatusOK, s.onCommand(r.Context(), payload))
-			}
+	w.WriteHeader(http.StatusOK)
+}
 
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	})
+func (s Service) handleCommand(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if !s.checkSignature(r) {
+		httperror.Unauthorized(ctx, w, errors.New("invalid signature"))
+		return
+	}
+
+	payload := SlashPayload{
+		ChannelID:   r.FormValue("channel_id"),
+		Command:     strings.TrimPrefix(r.FormValue("command"), "/"),
+		ResponseURL: r.FormValue("response_url"),
+		Text:        r.FormValue("text"),
+		Token:       r.FormValue("token"),
+		UserID:      r.FormValue("user_id"),
+	}
+
+	httpjson.Write(ctx, w, http.StatusOK, s.onCommand(ctx, payload))
 }
 
 func (s Service) checkSignature(r *http.Request) bool {
@@ -148,16 +149,19 @@ func (s Service) checkSignature(r *http.Request) bool {
 }
 
 func (s Service) handleInteract(w http.ResponseWriter, r *http.Request) {
-	var (
-		payload InteractivePayload
-		err     error
-	)
+	var err error
 
 	ctx, end := telemetry.StartSpan(r.Context(), s.tracer, "interact")
 	defer end(&err)
 
+	if !s.checkSignature(r) {
+		httperror.Unauthorized(ctx, w, errors.New("invalid signature"))
+		return
+	}
+
+	var payload InteractivePayload
 	if err := json.Unmarshal([]byte(r.FormValue("payload")), &payload); err != nil {
-		httpjson.Write(r.Context(), w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
+		httpjson.Write(ctx, w, http.StatusOK, NewEphemeralMessage(fmt.Sprintf("cannot unmarshall payload: %v", err)))
 		return
 	}
 

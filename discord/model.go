@@ -11,32 +11,24 @@ const customIDMaxLen = 100
 type interactionType uint
 
 const (
-	pingInteraction interactionType = 1
-	// ApplicationCommandInteraction occurs when user enter a slash command
+	pingInteraction               interactionType = 1
 	ApplicationCommandInteraction interactionType = 2
-	// MessageComponentInteraction occurs when user interact with an action
-	MessageComponentInteraction interactionType = 3
+	MessageComponentInteraction   interactionType = 3
 )
 
-// InteractionCallbackType defines types of possible answer
 type InteractionCallbackType uint
 
 const (
-	pongCallback InteractionCallbackType = 1
-	// ChannelMessageWithSource answer
-	ChannelMessageWithSource InteractionCallbackType = 4
-	// DeferredChannelMessageWithSource deferred answer
+	pongCallback                     InteractionCallbackType = 1
+	ChannelMessageWithSource         InteractionCallbackType = 4
 	DeferredChannelMessageWithSource InteractionCallbackType = 5
-	// DeferredUpdateMessage deferred in-place
-	DeferredUpdateMessage InteractionCallbackType = 6
-	// UpdateMessageCallback in place
-	UpdateMessageCallback InteractionCallbackType = 7
+	DeferredUpdateMessage            InteractionCallbackType = 6
+	UpdateMessageCallback            InteractionCallbackType = 7
 )
 
 type componentType uint
 
 const (
-	// ActionRowType for row
 	ActionRowType componentType = 1
 	buttonType    componentType = 2
 )
@@ -44,20 +36,15 @@ const (
 type buttonStyle uint
 
 const (
-	// PrimaryButton is green
-	PrimaryButton buttonStyle = 1
-	// SecondaryButton is grey
+	PrimaryButton   buttonStyle = 1
 	SecondaryButton buttonStyle = 2
-	// DangerButton is red
-	DangerButton buttonStyle = 4
+	DangerButton    buttonStyle = 4
 )
 
 const (
-	// EphemeralMessage int value
 	EphemeralMessage int = 1 << 6
 )
 
-// InteractionRequest when user perform an action
 type InteractionRequest struct {
 	Member        Member `json:"member"`
 	ID            string `json:"id"`
@@ -77,7 +64,6 @@ type InteractionRequest struct {
 	Type interactionType `json:"type"`
 }
 
-// Member of discord
 type Member struct {
 	User struct {
 		ID       string `json:"id,omitempty"`
@@ -85,7 +71,6 @@ type Member struct {
 	} `json:"user,omitempty"`
 }
 
-// InteractionDataResponse for responding to user
 type InteractionDataResponse struct {
 	Content         string          `json:"content,omitempty"`
 	AllowedMentions AllowedMentions `json:"allowed_mentions"`
@@ -116,13 +101,11 @@ func (d InteractionDataResponse) AddEmbed(embed Embed) InteractionDataResponse {
 	return d
 }
 
-// InteractionResponse for responding to user
 type InteractionResponse struct {
 	Data InteractionDataResponse `json:"data,omitempty"`
 	Type InteractionCallbackType `json:"type,omitempty"`
 }
 
-// NewResponse creates a response
 func NewResponse(iType InteractionCallbackType, content string) InteractionResponse {
 	return InteractionResponse{
 		Type: iType,
@@ -130,19 +113,16 @@ func NewResponse(iType InteractionCallbackType, content string) InteractionRespo
 	}
 }
 
-// Ephemeral set response to ephemeral
 func (i InteractionResponse) Ephemeral() InteractionResponse {
 	i.Data.Flags = EphemeralMessage
 	return i
 }
 
-// AddEmbed add given embed to response
 func (i InteractionResponse) AddEmbed(embed Embed) InteractionResponse {
 	i.Data = i.Data.AddEmbed(embed)
 	return i
 }
 
-// AddComponent add given component to response
 func (i InteractionResponse) AddComponent(component Component) InteractionResponse {
 	if i.Data.Components == nil {
 		i.Data.Components = []Component{component}
@@ -153,13 +133,11 @@ func (i InteractionResponse) AddComponent(component Component) InteractionRespon
 	return i
 }
 
-// AddAttachment add given attachment to response
 func (i InteractionResponse) AddAttachment(filename, filepath string, size int64) InteractionResponse {
 	i.Data.Attachments = append(i.Data.Attachments, newAttachment(len(i.Data.Attachments), size, filename, filepath, i.Data.Flags&EphemeralMessage != 0))
 	return i
 }
 
-// AsyncResponse to the user
 func AsyncResponse(replace, ephemeral bool) InteractionResponse {
 	response := InteractionResponse{
 		Type: DeferredChannelMessageWithSource,
@@ -176,12 +154,10 @@ func AsyncResponse(replace, ephemeral bool) InteractionResponse {
 	return response
 }
 
-// NewError creates an error response
 func NewError(replace bool, err error) InteractionResponse {
 	return NewEphemeral(replace, fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 }
 
-// NewEphemeral creates an ephemeral response
 func NewEphemeral(replace bool, content string) InteractionResponse {
 	callback := ChannelMessageWithSource
 	if replace {
@@ -198,30 +174,25 @@ func NewEphemeral(replace bool, content string) InteractionResponse {
 	return instance
 }
 
-// AllowedMentions list
 type AllowedMentions struct {
 	Parse []string `json:"parse"`
 }
 
-// Image content
 type Image struct {
 	URL string `json:"url"`
 }
 
-// NewImage create an image
 func NewImage(url string) *Image {
 	return &Image{
 		URL: url,
 	}
 }
 
-// Author content
 type Author struct {
 	Name string `json:"name"`
 	URL  string `json:"url,omitempty"`
 }
 
-// NewAuthor create an author
 func NewAuthor(name, url string) *Author {
 	return &Author{
 		Name: name,
@@ -229,7 +200,6 @@ func NewAuthor(name, url string) *Author {
 	}
 }
 
-// Embed of content
 type Embed struct {
 	Thumbnail   *Image  `json:"thumbnail,omitempty"`
 	Image       *Image  `json:"image,omitempty"`
@@ -241,20 +211,17 @@ type Embed struct {
 	Color       int     `json:"color,omitempty"`
 }
 
-// SetColor define color of embed
 func (e Embed) SetColor(color int) Embed {
 	e.Color = color
 	return e
 }
 
-// Field for embed
 type Field struct {
 	Name   string `json:"name"`
 	Value  string `json:"value"`
 	Inline bool   `json:"inline,omitempty"`
 }
 
-// NewField creates new field
 func NewField(name, value string) Field {
 	return Field{
 		Name:   name,
@@ -263,7 +230,6 @@ func NewField(name, value string) Field {
 	}
 }
 
-// Component describes an interactive component
 type Component struct {
 	Label      string        `json:"label,omitempty"`
 	CustomID   string        `json:"custom_id,omitempty"`
@@ -272,7 +238,6 @@ type Component struct {
 	Style      buttonStyle   `json:"style,omitempty"`
 }
 
-// NewButton creates a new button
 func NewButton(style buttonStyle, label, customID string) Component {
 	if len(customID) > customIDMaxLen {
 		slog.LogAttrs(context.Background(), slog.LevelWarn, "`custom_id` exceeds max characters", slog.Int("max", customIDMaxLen))
@@ -286,7 +251,6 @@ func NewButton(style buttonStyle, label, customID string) Component {
 	}
 }
 
-// Attachment for file upload
 type Attachment struct {
 	Filename  string `json:"filename"`
 	filepath  string
@@ -305,7 +269,6 @@ func newAttachment(id int, size int64, filename, filepath string, ephemeral bool
 	}
 }
 
-// Command configuration
 type Command struct {
 	Name        string          `json:"name,omitempty"`
 	Description string          `json:"description,omitempty"`
@@ -313,7 +276,6 @@ type Command struct {
 	Guilds      []string        `json:"-"`
 }
 
-// CommandOption configuration option
 type CommandOption struct {
 	Name        string `json:"name,omitempty"`
 	Description string `json:"description,omitempty"`

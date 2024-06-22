@@ -8,7 +8,7 @@ endif
 APP_NAME = discord_configure
 PACKAGES ?= ./...
 
-MAIN_SOURCE = cmd/discord/main.go
+MAIN_SOURCE = ./cmd/discord/
 MAIN_RUNNER = go run $(MAIN_SOURCE)
 ifeq ($(DEBUG), true)
 	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --

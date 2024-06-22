@@ -2,19 +2,15 @@ package slack
 
 import "fmt"
 
-// Block response for slack
 type Block any
 
-// Element response for slack
 type Element any
 
-// Text Slack's model
 type Text struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
 }
 
-// NewText creates Text
 func NewText(text string) Text {
 	return Text{
 		Type: "mrkdwn",
@@ -22,7 +18,6 @@ func NewText(text string) Text {
 	}
 }
 
-// NewPlainText creates PlainText
 func NewPlainText(text string) Text {
 	return Text{
 		Type: "plain_text",
@@ -30,14 +25,12 @@ func NewPlainText(text string) Text {
 	}
 }
 
-// Accessory Slack's model
 type Accessory struct {
 	Type  string `json:"type"`
 	Image string `json:"image_url"`
 	Alt   string `json:"alt_text"`
 }
 
-// NewAccessory creates Accessory
 func NewAccessory(image, alt string) *Accessory {
 	return &Accessory{
 		Type:  "image",
@@ -46,7 +39,6 @@ func NewAccessory(image, alt string) *Accessory {
 	}
 }
 
-// ButtonElement response for slack
 type ButtonElement struct {
 	Type     string `json:"type"`
 	Text     Text   `json:"text"`
@@ -55,7 +47,6 @@ type ButtonElement struct {
 	Style    string `json:"style,omitempty"`
 }
 
-// NewButtonElement creates ButtonElement
 func NewButtonElement(text string, actionID, value, style string) Element {
 	return ButtonElement{
 		Type:     "button",
@@ -66,7 +57,6 @@ func NewButtonElement(text string, actionID, value, style string) Element {
 	}
 }
 
-// Image Slack's model
 type Image struct {
 	Type  string `json:"type"`
 	Image string `json:"image_url"`
@@ -74,7 +64,6 @@ type Image struct {
 	Title Text   `json:"title"`
 }
 
-// NewImage creates Image
 func NewImage(image, alt, title string) Image {
 	return Image{
 		Type:  "image",
@@ -84,14 +73,12 @@ func NewImage(image, alt, title string) Image {
 	}
 }
 
-// Actions response for slack
 type Actions struct {
 	Type     string    `json:"type"`
 	BlockID  string    `json:"block_id,omitempty"`
 	Elements []Element `json:"elements"`
 }
 
-// NewActions creates Actions
 func NewActions(blockID string, elements ...Element) Actions {
 	return Actions{
 		Type:     "actions",
@@ -100,7 +87,6 @@ func NewActions(blockID string, elements ...Element) Actions {
 	}
 }
 
-// Section response for slack
 type Section struct {
 	Accessory *Accessory `json:"accessory,omitempty"`
 	Text      Text       `json:"text"`
@@ -108,7 +94,6 @@ type Section struct {
 	Fields    []Text     `json:"fields,omitempty"`
 }
 
-// NewSection creates Section
 func NewSection(text Text) Section {
 	return Section{
 		Type: "section",
@@ -116,18 +101,15 @@ func NewSection(text Text) Section {
 	}
 }
 
-// IsZero check if instance is populated
 func (s Section) IsZero() bool {
 	return len(s.Type) == 0 && len(s.Fields) == 0 && s.Accessory == nil && len(s.Text.Text) == 0
 }
 
-// WithAccessory set accessory for section
 func (s Section) WithAccessory(accessory *Accessory) Section {
 	s.Accessory = accessory
 	return s
 }
 
-// AddField add given field to section
 func (s Section) AddField(field Text) Section {
 	if s.Fields == nil {
 		s.Fields = []Text{field}
@@ -138,20 +120,17 @@ func (s Section) AddField(field Text) Section {
 	return s
 }
 
-// Context response for slack
 type Context struct {
 	Type     string    `json:"type"`
 	Elements []Element `json:"elements"`
 }
 
-// NewContext creates Context
 func NewContext() Context {
 	return Context{
 		Type: "context",
 	}
 }
 
-// AddElement add given element to context
 func (c Context) AddElement(element Element) Context {
 	if c.Elements == nil {
 		c.Elements = []Element{element}
@@ -162,7 +141,6 @@ func (c Context) AddElement(element Element) Context {
 	return c
 }
 
-// Response response content
 type Response struct {
 	ResponseType    string  `json:"response_type,omitempty"`
 	Text            string  `json:"text,omitempty"`
@@ -171,7 +149,6 @@ type Response struct {
 	DeleteOriginal  bool    `json:"delete_original,omitempty"`
 }
 
-// NewResponse creates text response
 func NewResponse(message string) Response {
 	return Response{
 		Text:         message,
@@ -179,25 +156,21 @@ func NewResponse(message string) Response {
 	}
 }
 
-// Ephemeral set type to ephemeral
 func (r Response) Ephemeral() Response {
 	r.ResponseType = "ephemeral"
 	return r
 }
 
-// WithReplaceOriginal set replace original to true
 func (r Response) WithReplaceOriginal() Response {
 	r.ReplaceOriginal = true
 	return r
 }
 
-// WithDeleteOriginal set delete original to true
 func (r Response) WithDeleteOriginal() Response {
 	r.DeleteOriginal = true
 	return r
 }
 
-// AddBlock add given block to response
 func (r Response) AddBlock(block Block) Response {
 	if r.Blocks == nil {
 		r.Blocks = []Block{block}
@@ -208,7 +181,6 @@ func (r Response) AddBlock(block Block) Response {
 	return r
 }
 
-// SlashPayload receives by a slash command
 type SlashPayload struct {
 	ChannelID   string `json:"channel_id"`
 	Command     string `json:"command"`
@@ -218,7 +190,6 @@ type SlashPayload struct {
 	UserID      string `json:"user_id"`
 }
 
-// InteractiveAction response from slack
 type InteractiveAction struct {
 	Type     string `json:"type"`
 	BlockID  string `json:"block_id,omitempty"`
@@ -226,7 +197,6 @@ type InteractiveAction struct {
 	Value    string `json:"value,omitempty"`
 }
 
-// InteractivePayload response from slack
 type InteractivePayload struct {
 	User struct {
 		ID string `json:"id"`
@@ -239,12 +209,10 @@ type InteractivePayload struct {
 	Actions     []InteractiveAction `json:"actions"`
 }
 
-// NewError creates ephemeral error response
 func NewError(err error) Response {
 	return NewEphemeralMessage(fmt.Sprintf("Oh! It's broken 😱. Reason is: %s", err))
 }
 
-// NewEphemeralMessage creates ephemeral text response
 func NewEphemeralMessage(message string) Response {
 	return NewResponse(message).Ephemeral().WithReplaceOriginal()
 }

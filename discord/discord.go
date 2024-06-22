@@ -19,13 +19,11 @@ import (
 	"github.com/ViBiOh/flags"
 	"github.com/ViBiOh/httputils/v4/pkg/httperror"
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
-	"github.com/ViBiOh/httputils/v4/pkg/query"
 	"github.com/ViBiOh/httputils/v4/pkg/request"
 	"github.com/ViBiOh/httputils/v4/pkg/telemetry"
 	"go.opentelemetry.io/otel/trace"
 )
 
-// OnMessage handle message event
 type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, func(context.Context) InteractionResponse)
 
 var discordRequest = request.New().URL("https://discord.com/api/v8")
@@ -85,25 +83,13 @@ func New(config *Config, website string, handler OnMessage, tracerProvider trace
 	return app, nil
 }
 
-func (s Service) Handler() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/oauth" {
-			s.handleOauth(w, r)
-			return
-		}
+func (s Service) NewServeMux() *http.ServeMux {
+	mux := http.NewServeMux()
 
-		if !s.checkSignature(r) {
-			httperror.Unauthorized(r.Context(), w, errors.New("invalid signature"))
-			return
-		}
+	mux.HandleFunc("GET /oauth", s.handleOauth)
+	mux.HandleFunc("POST /", s.handleWebhook)
 
-		if query.IsRoot(r) && r.Method == http.MethodPost {
-			s.handleWebhook(w, r)
-			return
-		}
-
-		httperror.NotFound(r.Context(), w)
-	})
+	return mux
 }
 
 func (s Service) checkSignature(r *http.Request) bool {
@@ -142,18 +128,23 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 	ctx, end := telemetry.StartSpan(r.Context(), s.tracer, "webhook")
 	defer end(&err)
 
+	if !s.checkSignature(r) {
+		httperror.Unauthorized(ctx, w, errors.New("invalid signature"))
+		return
+	}
+
 	if err = httpjson.Parse(r, &message); err != nil {
-		httperror.BadRequest(r.Context(), w, err)
+		httperror.BadRequest(ctx, w, err)
 		return
 	}
 
 	if message.Type == pingInteraction {
-		httpjson.Write(r.Context(), w, http.StatusOK, InteractionResponse{Type: pongCallback})
+		httpjson.Write(ctx, w, http.StatusOK, InteractionResponse{Type: pongCallback})
 		return
 	}
 
 	response, asyncFn := s.handler(ctx, message)
-	httpjson.Write(r.Context(), w, http.StatusOK, response)
+	httpjson.Write(ctx, w, http.StatusOK, response)
 
 	if asyncFn != nil {
 		go func(ctx context.Context) {
