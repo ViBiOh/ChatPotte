@@ -11,12 +11,13 @@ type services struct {
 }
 
 func newServices(config configuration) (services, error) {
-	discordService, err := discord.New(config.discord, "", nil, nil)
+	var output services
+	var err error
+
+	output.discord, err = discord.New(config.discord, "", nil, nil)
 	if err != nil {
-		return services{}, fmt.Errorf("discord: %w", err)
+		return output, fmt.Errorf("discord: %w", err)
 	}
 
-	return services{
-		discord: discordService,
-	}, nil
+	return output, nil
 }
