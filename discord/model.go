@@ -164,14 +164,28 @@ func NewEphemeral(replace bool, content string) InteractionResponse {
 		callback = UpdateMessageCallback
 	}
 
-	instance := InteractionResponse{Type: callback}
-	instance.Data.Content = content
-	instance.Data.Flags = EphemeralMessage
-	instance.Data.Embeds = []Embed{}
-	instance.Data.Components = []Component{}
-	instance.Data.Attachments = []Attachment{}
+	return InteractionResponse{
+		Type: callback,
+		Data: InteractionDataResponse{
+			Flags:       EphemeralMessage,
+			Content:     content,
+			Embeds:      []Embed{},
+			Components:  []Component{},
+			Attachments: []Attachment{},
+		},
+	}
+}
 
-	return instance
+func NewReplace(content string) InteractionResponse {
+	return InteractionResponse{
+		Type: UpdateMessageCallback,
+		Data: InteractionDataResponse{
+			Content:     content,
+			Embeds:      []Embed{},
+			Components:  []Component{},
+			Attachments: []Attachment{},
+		},
+	}
 }
 
 type AllowedMentions struct {

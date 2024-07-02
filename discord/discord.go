@@ -24,7 +24,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, func(context.Context) InteractionResponse)
+type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, bool, func(context.Context) InteractionResponse)
 
 var discordRequest = request.New().URL("https://discord.com/api/v8")
 
@@ -143,28 +143,56 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response, asyncFn := s.handler(ctx, message)
+	response, delete, asyncFn := s.handler(ctx, message)
 	httpjson.Write(ctx, w, http.StatusOK, response)
 
-	if asyncFn != nil {
-		go func(ctx context.Context) {
-			var err error
+	if delete {
+		go s.deleteMessage(context.WithoutCancel(ctx), message)
+	}
 
-			ctx, end := telemetry.StartSpan(ctx, s.tracer, "async_webhook")
-			defer end(&err)
+	if asyncFn == nil {
+		return
+	}
 
-			deferredResponse := asyncFn(ctx)
+	go func(ctx context.Context) {
+		var err error
 
-			resp, err := s.send(ctx, http.MethodPatch, fmt.Sprintf("/webhooks/%s/%s/messages/@original", s.applicationID, message.Token), deferredResponse.Data)
-			if err != nil {
-				slog.LogAttrs(ctx, slog.LevelError, "send async response", slog.Any("error", err))
-				return
-			}
+		ctx, end := telemetry.StartSpan(ctx, s.tracer, "async_webhook")
+		defer end(&err)
 
-			if err = request.DiscardBody(resp.Body); err != nil {
-				slog.LogAttrs(ctx, slog.LevelError, "discard async body", slog.Any("error", err))
-			}
-		}(context.WithoutCancel(ctx))
+		deferredResponse := asyncFn(ctx)
+
+		method, url := http.MethodPost, fmt.Sprintf("/webhooks/%s/%s", s.applicationID, message.Token)
+		if !delete {
+			method, url = http.MethodPatch, url+"/messages/@original"
+		}
+
+		resp, err := s.send(ctx, method, url, deferredResponse.Data)
+		if err != nil {
+			slog.LogAttrs(ctx, slog.LevelError, "send async response", slog.Any("error", err))
+			return
+		}
+
+		if err = request.DiscardBody(resp.Body); err != nil {
+			slog.LogAttrs(ctx, slog.LevelError, "discard async body", slog.Any("error", err))
+		}
+	}(context.WithoutCancel(ctx))
+}
+
+func (s Service) deleteMessage(ctx context.Context, message InteractionRequest) {
+	var err error
+
+	ctx, end := telemetry.StartSpan(ctx, s.tracer, "webhook_delete")
+	defer end(&err)
+
+	resp, err := discordRequest.Method(http.MethodDelete).Path(fmt.Sprintf("/webhooks/%s/%s/messages/@original", s.applicationID, message.Token)).Send(ctx, nil)
+	if err != nil {
+		slog.LogAttrs(ctx, slog.LevelError, "send webhook delete", slog.Any("error", err))
+		return
+	}
+
+	if err = request.DiscardBody(resp.Body); err != nil {
+		slog.LogAttrs(ctx, slog.LevelError, "discard delete body", slog.Any("error", err))
 	}
 }
 
