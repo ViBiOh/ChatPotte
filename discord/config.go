@@ -32,11 +32,9 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 		configure:
 			if resp, err := req.Method(http.MethodPost).Path(absoluteURL).StreamJSON(ctx, command); err != nil {
 				if resp.StatusCode == http.StatusTooManyRequests {
-					if resetAt, err := strconv.ParseInt(resp.Header.Get("X-RateLimit-Reset"), 10, 64); err == nil {
-						duration := time.Until(time.Unix(resetAt, 0))
-
-						slog.LogAttrs(ctx, slog.LevelWarn, fmt.Sprintf("Rate-limited, waiting %d before retrying...", duration), slog.String("url", absoluteURL))
-						time.Sleep(duration)
+					if duration, err := strconv.ParseInt(resp.Header.Get("Retry-after"), 10, 64); err == nil {
+						slog.LogAttrs(ctx, slog.LevelWarn, fmt.Sprintf("Rate-limited, waiting %ds before retrying...", duration), slog.String("url", absoluteURL))
+						time.Sleep(time.Duration(duration) * time.Second)
 
 						goto configure
 					}
