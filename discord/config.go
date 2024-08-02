@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
@@ -31,10 +32,14 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 		configure:
 			if resp, err := req.Method(http.MethodPost).Path(absoluteURL).StreamJSON(ctx, command); err != nil {
 				if resp.StatusCode == http.StatusTooManyRequests {
-					slog.LogAttrs(ctx, slog.LevelWarn, "Rate-limited, waiting 5 seconds before retrying...", slog.String("url", absoluteURL))
-					time.Sleep(time.Second * 5)
+					if resetAt, err := strconv.ParseInt(resp.Header.Get("X-RateLimit-Reset"), 10, 64); err == nil {
+						duration := time.Until(time.Unix(resetAt, 0))
 
-					goto configure
+						slog.LogAttrs(ctx, slog.LevelWarn, fmt.Sprintf("Rate-limited, waiting %d before retrying...", duration), slog.String("url", absoluteURL))
+						time.Sleep(duration)
+
+						goto configure
+					}
 				}
 
 				return fmt.Errorf("configure `%s` command for url `%s`: %w", name, registerURL, err)
