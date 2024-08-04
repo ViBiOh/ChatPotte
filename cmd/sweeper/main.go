@@ -55,13 +55,13 @@ func main() {
 
 		for _, channel := range channels {
 			wg.Add(1)
-			go func() {
+			go func(channelID string) {
 				defer wg.Done()
 
-				if err := services.discord.Messages(ctx, req, channel.ID, messagesCh); err != nil {
+				if err := services.discord.Messages(ctx, req, channelID, messagesCh); err != nil {
 					slog.Error("list messages", slog.Any("error", err))
 				}
-			}()
+			}(channel.ID)
 		}
 
 		for message := range messagesCh {
