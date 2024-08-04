@@ -14,6 +14,12 @@ ifeq ($(DEBUG), true)
 	MAIN_RUNNER = dlv debug $(MAIN_SOURCE) --
 endif
 
+SWEEPER_SOURCE = ./cmd/sweeper/
+SWEEPER_RUNNER = go run $(SWEEPER_SOURCE)
+ifeq ($(DEBUG), true)
+	SWEEPER_RUNNER = dlv debug $(SWEEPER_SOURCE) --
+endif
+
 .DEFAULT_GOAL := app
 
 ## help: Display list of commands
@@ -91,3 +97,13 @@ build:
 .PHONY: run
 run:
 	$(MAIN_RUNNER)
+
+## run-sweeper: Locally run the application, e.g. node index.js, python -m myapp, go run myapp etc ...
+.PHONY: run-sweeper
+run-sweeper:
+	$(SWEEPER_RUNNER)
+
+## config: Create local configuration
+.PHONY: config
+config:
+	@cp .env.example .env

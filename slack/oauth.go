@@ -32,8 +32,8 @@ func (s Service) handleOauth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var oauthResponse slackOauthReponse
-	if err := httpjson.Read(resp, &oauthResponse); err != nil {
+	oauthResponse, err := httpjson.Read[slackOauthReponse](resp)
+	if err != nil {
 		httperror.InternalServerError(r.Context(), w, fmt.Errorf("parse oauth response: %w", err))
 		return
 	}

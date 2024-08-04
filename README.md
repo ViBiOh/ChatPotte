@@ -19,6 +19,7 @@ Be careful when using the CLI values, if someone list the processes on the syste
 ```bash
 Usage of discord:
   --applicationID     string  [discord] Application ID ${DISCORD_APPLICATION_ID}
+  --botToken          string  [discord] Bot Token ${DISCORD_BOT_TOKEN}
   --clientID          string  [discord] Client ID ${DISCORD_CLIENT_ID}
   --clientSecret      string  [discord] Client Secret ${DISCORD_CLIENT_SECRET}
   --commands          string  [commands] Configuration of commands, as JSON string ${DISCORD_COMMANDS}

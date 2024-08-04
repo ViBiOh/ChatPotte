@@ -26,7 +26,7 @@ import (
 
 type OnMessage func(context.Context, InteractionRequest) (InteractionResponse, bool, func(context.Context) InteractionResponse)
 
-var discordRequest = request.New().URL("https://discord.com/api/v8")
+var discordRequest = request.New().URL("https://discord.com/api/v10")
 
 type Service struct {
 	tracer        trace.Tracer
@@ -34,6 +34,7 @@ type Service struct {
 	applicationID string
 	clientID      string
 	clientSecret  string
+	botToken      string
 	website       string
 	publicKey     []byte
 }
@@ -43,6 +44,7 @@ type Config struct {
 	PublicKey     string
 	ClientID      string
 	ClientSecret  string
+	BotToken      string
 }
 
 func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config {
@@ -52,6 +54,7 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 	flags.New("PublicKey", "Public Key").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.PublicKey, "", overrides)
 	flags.New("ClientID", "Client ID").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ClientID, "", overrides)
 	flags.New("ClientSecret", "Client Secret").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.ClientSecret, "", overrides)
+	flags.New("BotToken", "Bot Token").Prefix(prefix).DocPrefix("discord").StringVar(fs, &config.BotToken, "", overrides)
 
 	return &config
 }
@@ -72,6 +75,7 @@ func New(config *Config, website string, handler OnMessage, tracerProvider trace
 		publicKey:     publicKey,
 		clientID:      config.ClientID,
 		clientSecret:  config.ClientSecret,
+		botToken:      config.BotToken,
 		website:       website,
 		handler:       handler,
 	}
@@ -133,7 +137,8 @@ func (s Service) handleWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = httpjson.Parse(r, &message); err != nil {
+	message, err = httpjson.Parse[InteractionRequest](r)
+	if err != nil {
 		httperror.BadRequest(ctx, w, err)
 		return
 	}

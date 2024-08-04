@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
@@ -18,7 +19,7 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 		return nil
 	}
 
-	req, err := s.SigninClient(ctx)
+	req, err := s.SigninClient(ctx, "applications.commands.update")
 	if err != nil {
 		return fmt.Errorf("signin: %w", err)
 	}
@@ -31,13 +32,8 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 
 		configure:
 			if resp, err := req.Method(http.MethodPost).Path(absoluteURL).StreamJSON(ctx, command); err != nil {
-				if resp.StatusCode == http.StatusTooManyRequests {
-					if duration, err := strconv.ParseInt(resp.Header.Get("Retry-after"), 10, 64); err == nil {
-						slog.LogAttrs(ctx, slog.LevelWarn, fmt.Sprintf("Rate-limited, waiting %ds before retrying...", duration), slog.String("url", absoluteURL))
-						time.Sleep(time.Duration(duration) * time.Second)
-
-						goto configure
-					}
+				if IsRetryable(ctx, resp) {
+					goto configure
 				}
 
 				return fmt.Errorf("configure `%s` command for url `%s`: %w", name, registerURL, err)
@@ -50,24 +46,44 @@ func (s Service) ConfigureCommands(ctx context.Context, commands map[string]Comm
 	return nil
 }
 
-func (s Service) SigninClient(ctx context.Context) (request.Request, error) {
+func (s Service) SigninClient(ctx context.Context, scopes ...string) (request.Request, error) {
+	if len(s.botToken) != 0 {
+		return discordRequest.Header("Authorization", fmt.Sprintf("Bot %s", s.botToken)), nil
+	}
+
 	data := url.Values{}
 	data.Add("grant_type", "client_credentials")
-	data.Add("scope", "applications.commands.update")
+	data.Add("scope", strings.Join(scopes, " "))
 
 	resp, err := discordRequest.Method(http.MethodPost).Path("/oauth2/token").BasicAuth(s.clientID, s.clientSecret).Form(ctx, data)
 	if err != nil {
 		return discordRequest, fmt.Errorf("get token: %w", err)
 	}
 
-	content := make(map[string]any)
-	if err := httpjson.Read(resp, &content); err != nil {
+	content, err := httpjson.Read[map[string]any](resp)
+	if err != nil {
 		return discordRequest, fmt.Errorf("read oauth token: %w", err)
 	}
 
-	bearer := content["access_token"].(string)
+	tokenType, _ := content["token_type"].(string)
+	token, _ := content["access_token"].(string)
 
-	return discordRequest.Header("authorization", fmt.Sprintf("Bearer %s", bearer)), nil
+	return discordRequest.Header("Authorization", fmt.Sprintf("%s %s", tokenType, token)), nil
+}
+
+func IsRetryable(ctx context.Context, resp *http.Response) bool {
+	if resp.StatusCode != http.StatusTooManyRequests {
+		return false
+	}
+
+	if duration, err := strconv.ParseInt(resp.Header.Get("Retry-after"), 10, 64); err == nil {
+		slog.LogAttrs(ctx, slog.LevelWarn, fmt.Sprintf("Rate-limited, waiting %ds before retrying...", duration), slog.String("method", resp.Request.Method), slog.String("url", resp.Request.URL.Path))
+		time.Sleep(time.Duration(duration) * time.Second)
+
+		return true
+	}
+
+	return false
 }
 
 func getRegisterURLs(command Command) []string {
