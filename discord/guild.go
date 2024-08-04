@@ -19,6 +19,15 @@ type Channel struct {
 	Name string `json:"name"`
 }
 
+func CurrentUser(ctx context.Context, req request.Request) (User, error) {
+	resp, err := req.Path("/users/@me").Method(http.MethodGet).Send(ctx, nil)
+	if err != nil {
+		return User{}, fmt.Errorf("get: %w", err)
+	}
+
+	return httpjson.Read[User](resp)
+}
+
 func Guilds(ctx context.Context, req request.Request) ([]Guild, error) {
 	resp, err := req.Path("/users/@me/guilds").Method(http.MethodGet).Send(ctx, nil)
 	if err != nil {

@@ -32,6 +32,7 @@ func (m Message) String() string {
 type User struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
+	Bot      bool   `json:"bot"`
 }
 
 func (s Service) Messages(ctx context.Context, req request.Request, channelID string, output chan<- Message) error {

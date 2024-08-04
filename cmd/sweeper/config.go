@@ -13,7 +13,8 @@ type configuration struct {
 	logger  *logger.Config
 	discord *discord.Config
 
-	username *string
+	currentUser *string
+	usernames   *[]string
 }
 
 func newConfiguration() configuration {
@@ -24,7 +25,8 @@ func newConfiguration() configuration {
 		logger:  logger.Flags(fs, "logger"),
 		discord: discord.Flags(fs, ""),
 
-		username: flags.New("username", "Username of messages to clean").DocPrefix("sweeper").String(fs, "", nil),
+		currentUser: flags.New("currentUser", "Current User ID to clean").DocPrefix("sweeper").String(fs, "", nil),
+		usernames:   flags.New("username", "Username of messages to clean").DocPrefix("sweeper").StringSlice(fs, nil, nil),
 	}
 
 	_ = fs.Parse(os.Args[1:])

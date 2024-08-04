@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"runtime"
 	"strings"
@@ -38,7 +39,7 @@ func main() {
 	guilds, err := discord.Guilds(ctx, req)
 	logger.FatalfOnErr(ctx, err, "guilds")
 
-	before := time.Now().AddDate(0, -3, 0)
+	before := time.Now().AddDate(0, -2, 0)
 
 	for _, guild := range guilds {
 		channels, err := discord.Channels(ctx, req, guild)
@@ -64,10 +65,28 @@ func main() {
 		}
 
 		for message := range messagesCh {
-			if message.Timestamp.Before(before) && strings.EqualFold(message.Author.Username, *config.username) {
-				slog.Info("Deleting message", slog.String("message", message.String()))
+			if !message.Timestamp.Before(before) {
+				continue
+			}
+
+			if shouldDelete(*config.currentUser, message, *config.usernames) {
+				fmt.Println(message.String())
 				logger.FatalfOnErr(ctx, services.discord.DeleteMessage(ctx, req, message), "delete")
 			}
 		}
 	}
+}
+
+func shouldDelete(currentUser string, message discord.Message, usernames []string) bool {
+	if message.Author.Bot && strings.Contains(message.Content, currentUser) {
+		return true
+	}
+
+	for _, username := range usernames {
+		if strings.EqualFold(message.Author.Username, username) {
+			return true
+		}
+	}
+
+	return false
 }
