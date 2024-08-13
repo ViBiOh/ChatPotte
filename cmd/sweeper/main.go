@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/ViBiOh/ChatPotte/discord"
@@ -41,38 +40,31 @@ func main() {
 
 	before := time.Now().AddDate(0, -2, 0)
 
-	for _, guild := range guilds {
-		channels, err := discord.Channels(ctx, req, guild)
-		logger.FatalfOnErr(ctx, err, "channels")
+	messagesCh := make(chan discord.Message, runtime.NumCPU())
 
-		var wg sync.WaitGroup
-		messagesCh := make(chan discord.Message, runtime.NumCPU())
+	go func() {
+		for _, guild := range guilds {
+			channels, err := discord.Channels(ctx, req, guild)
+			logger.FatalfOnErr(ctx, err, "channels")
 
-		go func() {
-			wg.Wait()
-			close(messagesCh)
-		}()
-
-		for _, channel := range channels {
-			wg.Add(1)
-			go func(channelID string) {
-				defer wg.Done()
-
-				if err := services.discord.Messages(ctx, req, channelID, messagesCh); err != nil {
+			for _, channel := range channels {
+				if err := services.discord.Messages(ctx, req, channel.ID, messagesCh); err != nil {
 					slog.Error("list messages", slog.Any("error", err))
 				}
-			}(channel.ID)
+			}
 		}
 
-		for message := range messagesCh {
-			if !message.Timestamp.Before(before) {
-				continue
-			}
+		close(messagesCh)
+	}()
 
-			if shouldDelete(*config.currentUser, message, *config.usernames) {
-				fmt.Println(message.String())
-				logger.FatalfOnErr(ctx, services.discord.DeleteMessage(ctx, req, message), "delete")
-			}
+	for message := range messagesCh {
+		if !message.Timestamp.Before(before) {
+			continue
+		}
+
+		if shouldDelete(*config.currentUser, message, *config.usernames) {
+			fmt.Println(message.String())
+			logger.FatalfOnErr(ctx, services.discord.DeleteMessage(ctx, req, message), "delete")
 		}
 	}
 }
