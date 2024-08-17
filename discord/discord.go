@@ -60,14 +60,15 @@ func Flags(fs *flag.FlagSet, prefix string, overrides ...flags.Override) *Config
 }
 
 func New(config *Config, website string, handler OnMessage, tracerProvider trace.TracerProvider) (Service, error) {
-	publicKeyStr := config.PublicKey
-	if len(publicKeyStr) == 0 {
-		return Service{}, nil
-	}
+	var publicKey []byte
 
-	publicKey, err := hex.DecodeString(publicKeyStr)
-	if err != nil {
-		return Service{}, fmt.Errorf("decode public key string: %w", err)
+	if publicKeyStr := config.PublicKey; len(publicKeyStr) != 0 {
+		var err error
+
+		publicKey, err = hex.DecodeString(publicKeyStr)
+		if err != nil {
+			return Service{}, fmt.Errorf("decode public key string: %w", err)
+		}
 	}
 
 	app := Service{
