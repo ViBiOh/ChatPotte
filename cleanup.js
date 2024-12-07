@@ -25,7 +25,7 @@ async function clearMessages() {
   }
 
   function deleteMessage(message) {
-    console.log(`${message.content}`);
+    console.log(`${message.timestamp}: ${message.content}`);
 
     return fetch(`${baseURL}/${message.id}`, { headers, method: "DELETE" });
   }
