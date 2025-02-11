@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"runtime"
 	"strings"
@@ -62,16 +61,17 @@ func main() {
 			continue
 		}
 
-		if shouldDelete(*config.currentUser, message, *config.usernames) {
-			fmt.Println(message.String())
+		if shouldDelete(message, *config.userIDs, *config.usernames) {
 			logger.FatalfOnErr(ctx, services.discord.DeleteMessage(ctx, req, message), "delete")
 		}
 	}
 }
 
-func shouldDelete(currentUser string, message discord.Message, usernames []string) bool {
-	if message.Author.Bot && strings.Contains(message.Content, currentUser) {
-		return true
+func shouldDelete(message discord.Message, userIDs, usernames []string) bool {
+	for _, userID := range userIDs {
+		if message.Author.Bot && strings.Contains(message.Content, userID) {
+			return true
+		}
 	}
 
 	for _, username := range usernames {
