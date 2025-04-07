@@ -1,4 +1,4 @@
-FROM vibioh/scratch
+FROM rg.fr-par.scw.cloud/vibioh/scratch
 
 COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
