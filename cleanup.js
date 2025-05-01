@@ -25,13 +25,17 @@ async function clearMessages() {
   }
 
   function deleteMessage(message) {
-    console.log(`${message.timestamp}: ${message.content}`);
+    console.log(message);
 
     return fetch(`${baseURL}/${message.id}`, { headers, method: "DELETE" });
   }
 
   function filterMessages(message) {
-    return idUser === message.author.id && new Date(message.timestamp) < before;
+    return (
+      (idUser === message.author.id ||
+        (message.author.bot && message.content.indexOf(idUser) != -1)) &&
+      new Date(message.timestamp) < before
+    );
   }
 
   let beforeID;
@@ -41,11 +45,18 @@ async function clearMessages() {
     messages = await messages.json();
 
     if (messages.length === 0) {
+      console.info(`Done for ${channel}`);
       return;
     }
 
+    console.info(`Fetched ${messages.length} messages`);
+
     beforeID = messages[messages.length - 1].id;
     messages = messages.filter(filterMessages);
+
+    if (messages.length > 0) {
+      console.info(`Cleaning ${messages.length} messages...`);
+    }
 
     for (var i = 0; i < messages.length; i++) {
       await wait(1500);
