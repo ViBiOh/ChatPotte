@@ -1,6 +1,12 @@
 let authToken = "";
 let idUser = "";
 
+let forceStop = false;
+
+function clearStop() {
+  forceStop = true;
+}
+
 async function clearMessages() {
   const channel = window.location.href.split("/").pop();
   const baseURL = `https://discordapp.com/api/channels/${channel}/messages`;
@@ -34,13 +40,16 @@ async function clearMessages() {
     return (
       (idUser === message.author.id ||
         (message.author.bot && message.content.indexOf(idUser) != -1)) &&
-      new Date(message.timestamp) < before
+      new Date(message.timestamp) < before &&
+      (message.type == 0 || message.type == 19)
     );
   }
 
   let beforeID;
 
-  while (true) {
+  forceStop = false;
+
+  while (!forceStop) {
     messages = await getMessages(beforeID);
     messages = await messages.json();
 
