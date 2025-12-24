@@ -48,7 +48,7 @@ func main() {
 
 			for _, channel := range channels {
 				if err := services.discord.Messages(ctx, req, channel.ID, messagesCh); err != nil {
-					slog.Error("list messages", slog.Any("error", err))
+					slog.Error("list messages", slog.String("guild", guild.Name), slog.String("channel", channel.Name), slog.Any("error", err))
 				}
 			}
 		}
