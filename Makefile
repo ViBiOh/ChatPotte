@@ -5,7 +5,7 @@ ifneq ("$(wildcard .env)","")
 	export
 endif
 
-APP_NAME = ChatPotte
+APP_NAME = chatpotte
 PACKAGES ?= ./...
 
 MAIN_SOURCE = ./cmd/discord/
