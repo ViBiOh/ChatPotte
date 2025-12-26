@@ -28,7 +28,7 @@ spec:
     schedule: "0 1 * * *"
     timeZone: "Europe/Paris"
     image:
-      name: rg.fr-par.scw.cloud/vibioh/ChatPotte
+      name: rg.fr-par.scw.cloud/vibioh/chatpotte
       tag: "latest" # {"$imagepolicy": "default:flux-sweeper-web:tag"}
     labels:
       k8s-cleaner: "true"
