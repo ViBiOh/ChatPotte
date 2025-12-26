@@ -1,0 +1,64 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sweeper
+  namespace: default
+spec:
+  interval: 120m
+  chart:
+    spec:
+      chart: cron
+      version: "0.0.37"
+      sourceRef:
+        kind: HelmRepository
+        name: vibioh
+        namespace: default
+      interval: 120m
+  install:
+    crds: Skip
+  maxHistory: 3
+  upgrade:
+    remediation:
+      retries: 3
+  rollback:
+    cleanupOnFail: true
+  values:
+    nameOverride: sweeper
+    schedule: "0 1 * * *"
+    timeZone: "Europe/Paris"
+    image:
+      name: rg.fr-par.scw.cloud/vibioh/ChatPotte
+      tag: "latest" # {"$imagepolicy": "default:flux-sweeper-web:tag"}
+    labels:
+      k8s-cleaner: "true"
+      tags.datadoghq.com/env: "production"
+      tags.datadoghq.com/service: "sweeper"
+      tags.datadoghq.com/version: "latest" # {"$imagepolicy": "default:flux-sweeper-web:tag"}
+    env:
+      - name: GOMEMLIMIT
+        valueFrom:
+          resourceFieldRef:
+            resource: limits.memory
+      - name: VERSION
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['tags.datadoghq.com/version']
+      - name: OTEL_SERVICE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['tags.datadoghq.com/service']
+    config:
+      DISCORD_LOGGER_JSON: "true"
+      OTEL_RESOURCE_ATTRIBUTES: env=production,git.repository_url=github.com/ViBiOh/ChatPotte
+    secrets:
+      DISCORD_BOT_TOKEN: AgAMR60kvqCIGnBoCYgnMQ6uZmCSwFwvaXZUI8+LtMyBdtbhOEFcTtLyHoGTNsZtMkOeYKdhTM7oKsw4OQNnZA3y+zp+e8R2dvqIdjguQwtcP2ufPZy9vadq5nrlHMev5H4XZbydhbXNdYs2f1QogEThGJ5/TmyELfSZh7jKvX/uoWIt3Ut1sFyE1CBE7XTTa3vjIv64Ki5cVjryS8NyO0e3c35TvXur6m9BwZ3sCzZEKbHIsrSmcrOz3vefXoKVzRcO3zYaACWPffo+ros6bw/RTpX+h4AnEptCuqDuTU/6P1eXai08hgPyixr+q6NhvMMbK+MuwepFIyR9c6hOeie2KEOByro9cwRUlMdIZKs9+SYIj3Y6aLhNI6gRgTzy0mo6L7zgUQMEZyJ9oy70rh5PO0kHoLEJPB3mxTKxjYvAVw31fLLKMz4jPH5LyXLs2pOWsQQevENaj1WXuRCON7fVMkMMmFuQ8BiwDedO3m8joatj8/PgBO8faWl8PKlXLzu3GThfHJ6R2BTbujRgnOde7NGcGDWsUamlYcliCa0kW6lC4qFFP5FaoTg9n5p7iIIjPdzp9Epb4xS5cER7x+HuJKHgRIGNnKAPZdyCOqiiJxGOxzx+oi+Amw1wMrpQPbH1PzWpY9Ss3atlE9mkHbIes0+NtL0NQ8YOOm9xjWncCWiNNs6BSxaMZqvmoWU6ujTNzjtsOvMAlBWgpvIduqF9UMEHUeSEM2QJ9ad/CfXSrOFdEja/WpN9SXM95Kho93gpbNs7vtTYc6DOMlLPbl9SG+teRV1KGfE=
+      DISCORD_USER: AgCee9vrUBP9JPmOCkz+I8CcOF03oE8fRX/uItYG3Be7QavfWlk/6EI7DOEtAaBGj9YlWCJ6cX9OOfkUDgRb/h2/vlxq0uP2l/pBAt4kmBmxM9vpEYWS8zAvYKHKcarHsXbkW/VqzgxfENN9tlRJjUMR3/gW49GoSaCMkzEK0BGrJwlOciWy/n0dDKTAR8Id4lxnCseyM6WBSRQrytkNykdeSBXgCj7ThCVIyD+3xTn47/GpPHmSsvy3nnUZcED1qztgfGabVXN1IP+3CZIMo81/sYEJXlGWG+Uz2VWquRo5Si9FH0WYHSN1msUrVqSxjvrMtP2EiVrmSWsL67f2bHv3TV6dRhlxQ71tp7PYDYWMKu9gR/5QKFL2Y4F3mHTX/vP8Nc40eVJ2Ai44B1CpUqzIcqZJUxsn+oC8OYGWsrF5EuacDGqhkjFZ+xlX1eOmua7CRD0tb6uDrsHSmprKUWUnxypxnyHG8pX36Cxm2zjTAJguYoOCQ8ZMObHJli+jssscVIjGsgEqyxAUtE8sh4nsZt7IJNijLsyUofOVIg1t5rFojiNuQrqyLcRHLO8ARpVo6tLn4Q/3FGagu+jR59bi8wkGbo7t5zk6bQuvb8pymEQKma9vMaadNu2KSJAwxuGIEccfJpcUMn7rbh4R0G0ia20VkxNN9N7F+W8IeKV9QgajVgTnVLgf/ah2ACs5SwGi+zMAPQ4gxipr+EQLdvgAneHvngQMa94og4o1k3guFVXEzRQZ
+      DISCORD_USERNAME: AgBTUCzL1JcVnyvCOdlzOoRtfc4eiBoIKX+a6eTpW1b8TKfoBTt3vg/o09CPf7wudeF4916RXF5P8KnTF/NQAzi37wwD1IzQQK+s8NDR07r7Roa2zpKo5LdxhtKT1FU4aRmHYruHF8Hu9nmt8anU3DCw0YZxj6yTTitJXfwEytGT6zqjym72gn4Z7kL1shzXMeag7LO9vrohKFsePbrh5qejSBdVhovMJCS4lINW+wUfzmu3gY/AZw1v0xYfbRcTQZmv/9mkKPNq2tYwa8w/ZbkuG073hPX3DmWvTmk5VH9035lOsOvOorDiuAX1wOO35el+9R7oNcgOhEIHumF5hg4xucVv0H+O1B0l6V0OZJWI059hc8cD2QH/ZO9mLm0yAanwGWnD1LCiYbJhk3id/dm8/cpWUJpK7JMGxGi+xY8dXGcgM47sBRUbmATuF680KEZbYpAqz1sofvyhWCKcIuamPoyw1ehHu/6sw1Jp19pp7iuC1JuRW8JBXyYbPFcMPeeM0i7kkeVlgeyDK35toUnFnU98dTwrZ2EzilpHn+e35CKZ0TvBk4upg4lHTgbsb2qEME135eAID23DuvG7Zk16yshcfKNei4xw2kIM9I/DOEA+bqJfthLrvMuTVOSd00WH7B1B7fa6cJzo6v3zKSlA90ZRVSzN1pV7p8zHZFJbkqc6TSVC2+43JUuu+Z1Pq3IbbM63sIk9S9yQDOBR9Q==
+    containers:
+      - name: job
+        command:
+          - /sweeper
+    resources:
+      limits:
+        memory: 128Mi
