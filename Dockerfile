@@ -14,3 +14,4 @@ ARG TARGETOS
 ARG TARGETARCH
 
 COPY release/discord_${TARGETOS}_${TARGETARCH} /discord
+COPY release/sweeper_${TARGETOS}_${TARGETARCH} /sweeper
