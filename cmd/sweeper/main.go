@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"runtime"
 	"strings"
@@ -56,15 +57,25 @@ func main() {
 		close(messagesCh)
 	}()
 
+	var read, deleted uint
+
 	for message := range messagesCh {
+		read++
+
 		if !message.Timestamp.Before(before) {
 			continue
 		}
 
 		if shouldDelete(message, *config.userIDs, *config.usernames) {
-			logger.FatalfOnErr(ctx, services.discord.DeleteMessage(ctx, req, message), "delete")
+			if err := services.discord.DeleteMessage(ctx, req, message); err != nil {
+				slog.ErrorContext(ctx, "unable to delete delete message", slog.Any("error", err))
+			} else {
+				deleted++
+			}
 		}
 	}
+
+	slog.InfoContext(ctx, fmt.Sprintf("%d messages read, %d deleted", read, deleted))
 }
 
 func shouldDelete(message discord.Message, userIDs, usernames []string) bool {
