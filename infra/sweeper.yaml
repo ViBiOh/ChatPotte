@@ -1,4 +1,3 @@
----
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
@@ -29,11 +28,11 @@ spec:
     timeZone: "Europe/Paris"
     image:
       name: rg.fr-par.scw.cloud/vibioh/chatpotte
-      tag: "latest" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
+      tag: "202512262013" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
     labels:
       tags.datadoghq.com/env: "production"
       tags.datadoghq.com/service: "sweeper"
-      tags.datadoghq.com/version: "latest" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
+      tags.datadoghq.com/version: "202512262013" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
     env:
       - name: GOMEMLIMIT
         valueFrom:
