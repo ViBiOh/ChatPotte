@@ -77,9 +77,7 @@ func IsRetryable(ctx context.Context, resp *http.Response) bool {
 	}
 
 	if duration, err := strconv.ParseInt(resp.Header.Get("Retry-after"), 10, 64); err == nil {
-		slog.LogAttrs(ctx, slog.LevelWarn, fmt.Sprintf("Rate-limited, waiting %ds before retrying...", duration), slog.String("method", resp.Request.Method), slog.String("url", resp.Request.URL.Path))
 		time.Sleep(time.Duration(duration) * time.Second)
-
 		return true
 	}
 
