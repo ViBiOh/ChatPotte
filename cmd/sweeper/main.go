@@ -43,6 +43,8 @@ func main() {
 	messagesCh := make(chan discord.Message, runtime.NumCPU())
 
 	go func() {
+		defer close(messagesCh)
+
 		for _, guild := range guilds {
 			channels, err := discord.Channels(ctx, req, guild)
 			logger.FatalfOnErr(ctx, err, "channels")
@@ -53,8 +55,6 @@ func main() {
 				}
 			}
 		}
-
-		close(messagesCh)
 	}()
 
 	var read, deleted uint
