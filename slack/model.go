@@ -47,7 +47,7 @@ type ButtonElement struct {
 	Style    string `json:"style,omitempty"`
 }
 
-func NewButtonElement(text string, actionID, value, style string) Element {
+func NewButtonElement(text, actionID, value, style string) Element {
 	return ButtonElement{
 		Type:     "button",
 		Text:     NewPlainText(text),
