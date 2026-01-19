@@ -28,11 +28,11 @@ spec:
     timeZone: "Europe/Paris"
     image:
       name: rg.fr-par.scw.cloud/vibioh/chatpotte
-      tag: "202601111648" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
+      tag: "202601191750" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
     labels:
       tags.datadoghq.com/env: "production"
       tags.datadoghq.com/service: "sweeper"
-      tags.datadoghq.com/version: "202601111648" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
+      tags.datadoghq.com/version: "202601191750" # {"$imagepolicy": "default:flux-chatpotte-web:tag"}
     env:
       - name: GOMEMLIMIT
         valueFrom:
