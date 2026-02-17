@@ -68,7 +68,7 @@ type Member struct {
 	User struct {
 		ID       string `json:"id,omitempty"`
 		Username string `json:"username,omitempty"`
-	} `json:"user,omitempty"`
+	} `json:"user"`
 }
 
 type InteractionDataResponse struct {
@@ -102,7 +102,7 @@ func (d InteractionDataResponse) AddEmbed(embed Embed) InteractionDataResponse {
 }
 
 type InteractionResponse struct {
-	Data InteractionDataResponse `json:"data,omitempty"`
+	Data InteractionDataResponse `json:"data"`
 	Type InteractionCallbackType `json:"type,omitempty"`
 }
 

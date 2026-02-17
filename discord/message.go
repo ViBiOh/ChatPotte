@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/httpjson"
@@ -20,13 +21,14 @@ type Message struct {
 }
 
 func (m Message) String() string {
-	output := fmt.Sprintf("[%s] %s: %s", m.Timestamp.Format(time.RFC3339), m.Author.Username, m.Content)
+	var output strings.Builder
+	output.WriteString(fmt.Sprintf("[%s] %s: %s", m.Timestamp.Format(time.RFC3339), m.Author.Username, m.Content))
 
 	for _, embed := range m.Embeds {
-		output += fmt.Sprintf(", %s - %s", embed.Title, embed.Description)
+		output.WriteString(fmt.Sprintf(", %s - %s", embed.Title, embed.Description))
 	}
 
-	return output
+	return output.String()
 }
 
 type User struct {

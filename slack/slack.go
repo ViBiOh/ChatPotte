@@ -134,7 +134,7 @@ func (s Service) checkSignature(r *http.Request) bool {
 	r.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	slackSignature := r.Header.Get("X-Slack-Signature")
-	signatureValue := []byte(fmt.Sprintf("v0:%d:%s", tsValue, body))
+	signatureValue := fmt.Appendf(nil, "v0:%d:%s", tsValue, body)
 
 	sig := hmac.New(sha256.New, s.signingSecret)
 	sig.Write(signatureValue)

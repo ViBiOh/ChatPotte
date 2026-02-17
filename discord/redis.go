@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"slices"
 	"time"
 
 	"github.com/ViBiOh/httputils/v4/pkg/hash"
@@ -21,10 +22,8 @@ func SaveCustomID(ctx context.Context, redisApp redis.Client, prefix string, val
 }
 
 func RestoreCustomID(ctx context.Context, redisApp redis.Client, prefix, customID string, statics []string) (url.Values, error) {
-	for _, static := range statics {
-		if customID == static {
-			return url.ParseQuery(customID)
-		}
+	if slices.Contains(statics, customID) {
+		return url.ParseQuery(customID)
 	}
 
 	content, err := redisApp.Load(ctx, cacheKey(prefix, customID))
