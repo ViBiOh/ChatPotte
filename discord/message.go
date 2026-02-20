@@ -22,10 +22,10 @@ type Message struct {
 
 func (m Message) String() string {
 	var output strings.Builder
-	output.WriteString(fmt.Sprintf("[%s] %s: %s", m.Timestamp.Format(time.RFC3339), m.Author.Username, m.Content))
+	fmt.Fprintf(&output, "[%s] %s: %s", m.Timestamp.Format(time.RFC3339), m.Author.Username, m.Content)
 
 	for _, embed := range m.Embeds {
-		output.WriteString(fmt.Sprintf(", %s - %s", embed.Title, embed.Description))
+		fmt.Fprintf(&output, ", %s - %s", embed.Title, embed.Description)
 	}
 
 	return output.String()
