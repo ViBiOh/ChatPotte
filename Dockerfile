@@ -1,6 +1,6 @@
 FROM rg.fr-par.scw.cloud/vibioh/scratch
 
-COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+COPY cacert.pem /etc/ssl/cert.pem
 
 ENTRYPOINT [ "/discord" ]
 
